@@ -178,17 +178,28 @@ class Promise {
       }
     })
   }
+
+  // 拓展5
+  finally (callback) {
+    return this.then((data) => {
+      return Promise.resolve(callback()).then(() => data)
+    }, err => {
+      return Promise.resolve(callback()).then(() => {
+        throw err
+      })
+    })
+  }
 }
 
-Promise.prototype.finally = function (callback) {
-  return this.then((data) => {
-    return Promise.resolve(callback()).then(() => data)
-  }, err => {
-    return Promise.resolve(callback()).then(() => {
-      throw err
-    })
-  })
-}
+// Promise.prototype.finally = function (callback) {
+//   return this.then((data) => {
+//     return Promise.resolve(callback()).then(() => data)
+//   }, err => {
+//     return Promise.resolve(callback()).then(() => {
+//       throw err
+//     })
+//   })
+// }
 
 // 测试时调用此方法
 Promise.defer = Promise.deferred = function () {
