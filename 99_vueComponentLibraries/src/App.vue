@@ -1,45 +1,17 @@
 <template>
   <div id="app">
-    <zh-row>
-      <zh-col :span="12">a</zh-col>
-      <zh-col :span="12">b</zh-col>
-    </zh-row>
-    <zh-row>
-      <zh-col :span="24">c</zh-col>
-    </zh-row>
-
-    <zh-row>
-      <zh-col :span="6">a</zh-col>
-      <zh-col :span="6" :offset="12">b</zh-col>
-    </zh-row>
-
-    <zh-row :gutter="20">
-      <zh-col :span="6">
-        <div class="green">a</div>
-      </zh-col>
-      <zh-col :span="6">
-        <div class="red">b</div>
-      </zh-col>
-      <zh-col :span="6">
-        <div class="green">c</div>
-      </zh-col>
-      <zh-col :span="6">
-        <div class="red">d</div>
-      </zh-col>
-      <zh-col :span="6">
-        <div class="red">d</div>
-      </zh-col>
-    </zh-row>
-
+    <zh-input v-model="value" type="text" placeholder="输入用户名" name="username"/>
+    <zh-input v-model="value" type="password" placeholder="输入密码" name="password"/>
+    {{value}}
   </div>
 </template>
 
 <script>
 export default {
   name: 'App',
-  methods: {
-    fn (e) {
-      console.log(e)
+  data () {
+    return {
+      value: ''
     }
   }
 }

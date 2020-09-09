@@ -1,5 +1,5 @@
 <template>
-  <div class="zh-row" :style="rowStyle">
+  <div class="zh-row" ref="zhRow" :style="rowStyle">
     <slot></slot>
   </div>
 </template>
@@ -11,6 +11,15 @@ export default {
     gutter: {
       type: Number,
       default: 0
+    },
+    justify: {
+      type: String,
+      validator (type) {
+        if (type && !['start', 'end', 'center', 'space-around', 'space-between'].includes(type)) {
+          console.error('类型必须是：start, end, center, space-around, space-between')
+        }
+        return true
+      }
     }
   },
   computed: {
@@ -18,10 +27,21 @@ export default {
       let style = {}
       if (this.gutter) {
         style = {
-          ...style
-          // marginLeft: -this.gutter / 2 + 'px'
-          // marginRight: -this.gutter / 2 + 'px'
+          ...style,
+          marginLeft: -this.gutter / 2 + 'px',
+          marginRight: -this.gutter / 2 + 'px'
         }
+      }
+
+      if (this.justify) {
+        const key = ['start', 'end'].includes(this.justify) ? 'flex-' + this.justify : this.justify
+
+        style = {
+          ...style,
+          justifyContent: key
+        }
+
+        return style
       }
       return style
     }
