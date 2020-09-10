@@ -4,11 +4,11 @@ const STATUS = {
   REJECTED: 'REJECTED'
 }
 
-function isPromise(val) {
+function isPromise (val) {
   return val && (typeof val.then === "function")
 }
 
-function resolvePromise(x, promise2, resolve, reject) {
+function resolvePromise (x, promise2, resolve, reject) {
   if (promise2 === x) return reject(new TypeError('不能自己等待自己完成一件事'))
   if ((typeof x === 'object' && x !== null) || typeof x === 'function') {
     let called
@@ -39,7 +39,7 @@ function resolvePromise(x, promise2, resolve, reject) {
 }
 
 class Promise {
-  constructor(executor) {
+  constructor (executor) {
     this.status = STATUS.PENDING
 
     this.value = undefined
@@ -76,7 +76,7 @@ class Promise {
     }
   }
 
-  then(onFulfilled, onRejected) {
+  then (onFulfilled, onRejected) {
     // 处理then中可选参数
     onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : data => data
     onRejected = typeof onRejected === 'function' ? onRejected : err => {
@@ -134,31 +134,31 @@ class Promise {
   }
 
   // 拓展1 静态resolve
-  static resolve(val) {
+  static resolve (val) {
     return new Promise((resolve, reject) => {
       resolve(val)
     })
   }
 
   // 拓展2 静态reject
-  static reject(reason) {
+  static reject (reason) {
     return new Promise((resolve, reject) => {
       reject(reason)
     })
   }
 
   // 拓展3
-  catch(err) {
+  catch (err) {
     return this.then(null, err)
   }
 
   // 拓展4
-  static all(promises) {
+  static all (promises) {
     return new Promise((resolve, reject) => {
       let result = []
       let count = 0
 
-      function processData(index, val) {
+      function processData (index, val) {
         result[index] = val
         if (++count === promises.length) {
           resolve(result)
@@ -187,6 +187,18 @@ class Promise {
       return Promise.resolve(callback()).then(() => {
         throw err
       })
+    })
+  }
+
+  // 拓展6
+  static race (promise) {
+    return new Promise((resolve, reject) => {
+      let currentVal = promise[i]
+      if (currentVal && typeof currentVal.then === 'function') {
+        currentVal.then(resolve, reject)
+      } else {
+        resolve(currentVal)
+      }
     })
   }
 }
