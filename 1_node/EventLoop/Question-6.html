@@ -41,6 +41,40 @@ console.log('script end')
 // promise2
 // setTimeout
 
+const flatArr = [1, 2, 3, [1, 2, 3, 4, [2, 3, 4]]]
+
+function flatArrFn(arr) {
+  return arr.reduce((res, cur) => {
+    return Array.isArray(cur) ? [...res, ...flatArrFn(cur)] : [...res, cur]
+  }, [])
+}
+
+const arr = flatArrFn(flatArr)
+
+console.log(arr)
+
+Array.prototype.myFilter = function(fn, ctx) {
+  if (!Array.isArray(this)) throw new TypeError('err')
+  if (typeof fn !== 'function') throw new TypeError('err')
+
+  const len = this.length
+  const arr = []
+
+  for (let i = 0; i < len; i++) {
+    const item = this[i];
+    if (!Object.hasOwnProperty(i)) break
+    fn.call(ctx, item, i, this) && arr.push(item)
+  }
+
+  return arr
+}
+
+const filterArr = arr.filter((item, i, arr) => {
+  return item > 2
+})
+
+console.log(filterArr)
+
 </script>
 </body>
 </html>
