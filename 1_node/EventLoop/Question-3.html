@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Question-3</title>
+</head>
+<body>
+<button id="button">button</button>
+<script>
+
+// 事件任务
+const button = document.getElementById('button')
+
+button.addEventListener('click', ()=>{
+  console.log('listener1');
+  Promise.resolve().then(()=>console.log('micro task1'))
+})
+
+button.addEventListener('click', ()=>{
+  console.log('listener2');
+  Promise.resolve().then(()=>console.log('micro task2'))
+})
+
+button.click();
+
+// listener1
+// listener2
+// micro task1
+// micro task2
+// js调用是代码同步执行
+
+// 如果是点击的就是：
+// listener1
+// micro task1
+// listener2
+// micro task2
+// 点击是宏任务
+
+</script>
+</body>
+</html>
