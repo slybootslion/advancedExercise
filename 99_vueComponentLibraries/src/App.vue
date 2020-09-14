@@ -1,6 +1,11 @@
 <template>
   <div id="app">
+    <input type="text" disabled>
+
     <zh-input v-model="value" type="text" placeholder="输入用户名" name="username"/>
+    <zh-input v-model="value" clearable type="text" placeholder="输入用户名" name="username"/>
+    <zh-input v-model="value" showPassword type="text" placeholder="输入用户名" name="username"/>
+    <zh-input type="text" disabled placeholder="输入用户名" name="username"/>
     <zh-input v-model="value" type="password" placeholder="输入密码" name="password"/>
     {{value}}
   </div>
