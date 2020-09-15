@@ -15,6 +15,8 @@ Module.prototype.load = function () {
   Module._extensions[extension](this)
 }
 
+Module._cache = {}
+
 Module.wrapper = function (content) {
   return `(function (exports, require, module, __filename, __dirname) {${content}})`
 }
@@ -51,7 +53,12 @@ Module._resolveFilename = function (filename) {
 
 function myReq (filename) {
   const filePath = Module._resolveFilename(filename)
+  // 判断缓存
+  if (Module._cache[filePath]) {
+    return Module._cache[filePath].exports
+  }
   const module = new Module(filePath)
+  Module._cache[filePath] = module
   module.load()
   return module.exports
 }
