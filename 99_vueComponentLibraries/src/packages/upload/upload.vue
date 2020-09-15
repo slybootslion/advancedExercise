@@ -83,6 +83,7 @@ export default {
         uid: rawFile.uid,
         raw: rawFile
       }
+      // 40:36
       console.log(file)
     },
     upload (rawFile) {
