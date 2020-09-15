@@ -75,7 +75,15 @@ export default {
     },
     handleStart (rawFile) {
       rawFile.uid = Math.random() + this.tempIndex++
-      
+      const file = {
+        status: 'ready',
+        name: rawFile.name,
+        size: rawFile.size,
+        percentage: 0,
+        uid: rawFile.uid,
+        raw: rawFile
+      }
+      console.log(file)
     },
     upload (rawFile) {
       console.log(rawFile)
