@@ -9,6 +9,7 @@ import Footer from './container/footer'
 import Header from './container/header'
 import Main from './container/main'
 import Input from './input/input'
+import Upload from './upload/upload'
 
 const install = (Vue) => {
   Vue.component(Button.name, Button)
@@ -24,6 +25,8 @@ const install = (Vue) => {
   Vue.component(Main.name, Main)
 
   Vue.component(Input.name, Input)
+
+  Vue.component(Upload.name, Upload)
 }
 if (typeof window.Vue !== 'undefined') {
   // eslint-disable-next-line no-undef

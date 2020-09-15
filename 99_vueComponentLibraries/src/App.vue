@@ -1,13 +1,20 @@
 <template>
   <div id="app">
-    <input type="text" disabled>
-
-    <zh-input v-model="value" type="text" placeholder="输入用户名" name="username"/>
-    <zh-input v-model="value" clearable type="text" placeholder="输入用户名" name="username"/>
-    <zh-input v-model="value" showPassword type="text" placeholder="输入用户名" name="username"/>
-    <zh-input type="text" disabled placeholder="输入用户名" name="username"/>
-    <zh-input v-model="value" type="password" placeholder="输入密码" name="password"/>
-    {{value}}
+    <zh-upload name="avatar"
+               action="http://loacalhost:3000/upload"
+               :file-list="fileList"
+               :limit="3"
+               accept="image/jpeg"
+               :multiple="true"
+               :on-exceed="handleExceed"
+               :on-change="handleChange"
+               :on-success="handleSuccess"
+               :on-error="handleError"
+               :on-progress="handleProgress"
+    >
+      <zh-button type="primary" icon="tabshouqi">点击上传</zh-button>
+      <div slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+    </zh-upload>
   </div>
 </template>
 
@@ -16,7 +23,22 @@ export default {
   name: 'App',
   data () {
     return {
-      value: ''
+      fileList: [
+        { url: 'xxx', name: 'zfjg' },
+        { url: 'xxx', name: 'zfjg' }
+      ]
+    }
+  },
+  methods: {
+    handleExceed () {
+    },
+    handleChange () {
+    },
+    handleSuccess () {
+    },
+    handleError () {
+    },
+    handleProgress () {
     }
   }
 }
