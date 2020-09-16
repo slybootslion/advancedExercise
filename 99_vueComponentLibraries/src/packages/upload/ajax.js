@@ -2,6 +2,7 @@ export default function ajax (options) {
   const xhr = new XMLHttpRequest()
   const action = options.action
   const fd = new FormData()
+  fd.append(options.filename, options.file)
   // 错误
   xhr.onerror = function (err) {
     options.onError(err)

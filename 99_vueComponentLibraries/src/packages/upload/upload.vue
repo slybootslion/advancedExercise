@@ -71,9 +71,6 @@ export default {
       }
     }
   },
-  mounted () {
-    console.log(this)
-  },
   methods: {
     handleClick () {
       const inputDom = this.$refs.input
@@ -121,16 +118,17 @@ export default {
       const uid = rawFile.uid
       const options = {
         file: rawFile,
-        filename: rawFile.name,
+        filename: this.name,
         action: this.action,
+        // 上传进度
         onProgress: ev => {
-
+          this.handleProgress(ev, rawFile)
         },
         onSuccess: res => {
-
+          this.handleSuccess(res, rawFile)
         },
         onError: err => {
-          console.log(err)
+          this.handleError(err, rawFile)
         }
       }
 
@@ -139,6 +137,23 @@ export default {
       if (req && req.then) {
         req.then(options.onSuccess, options.onError)
       }
+    },
+    getFile (rawFile) {
+      return this.files.find(file => file.uid === rawFile.uid)
+    },
+    handleProgress (ev, rawFile) {
+      // 获取格式化之后的文件
+      const file = this.getFile(rawFile)
+      file.status = 'uploading'
+      file.percentage = ev.percent || 0
+      this.onProgress && this.onProgress(ev, rawFile)
+    },
+    handleSuccess (rawFile) {
+      const file = this.getFile(rawFile)
+      console.log(file)
+    },
+    handleError () {
+
     }
   }
 }
