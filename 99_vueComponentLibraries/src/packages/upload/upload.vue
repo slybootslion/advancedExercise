@@ -47,11 +47,25 @@ export default {
     onChange: Function,
     onSuccess: Function,
     onError: Function,
-    onProgress: Function
+    onProgress: Function,
+    beforeUpload: Function
   },
   data () {
     return {
-      tempIndex: 1
+      tempIndex: 1,
+      files: [] // 存储要展示的列表
+    }
+  },
+  watch: {
+    fileList: {
+      immediate: true,
+      handler (fileList) {
+        this.files = fileList.map(item => {
+          item.uid = Math.random() + this.tempIndex++
+          item.status = 'success'
+          return item
+        })
+      }
     }
   },
   methods: {
@@ -70,7 +84,7 @@ export default {
       }
       [...files].forEach(rawFile => {
         this.handleStart(rawFile) // 上传前的处理
-        this.upload(rawFile) // 真正的上传
+        this.upload(rawFile) // 上传前的校验
       })
     },
     handleStart (rawFile) {
@@ -83,11 +97,22 @@ export default {
         uid: rawFile.uid,
         raw: rawFile
       }
-      // 40:36
-      console.log(file)
+      // 将用户上传的当前文件push到列表中（上传后显示用）
+      this.files.push(file)
+      this.onChange && this.onChange(file)
     },
     upload (rawFile) {
-      console.log(rawFile)
+      if (!this.beforeUpload) {
+        // 直接上传
+        return this.post(rawFile)
+      }
+      if (this.beforeUpload(rawFile)) {
+        return this.post(rawFile)
+      }
+    },
+    // 真正的上传
+    post () {
+
     }
   }
 }
