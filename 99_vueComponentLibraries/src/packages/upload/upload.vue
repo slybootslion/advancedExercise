@@ -18,9 +18,7 @@
 </template>
 
 <script>
-/*
-
- */
+import ajax from './ajax'
 
 export default {
   name: 'zh-upload',
@@ -48,12 +46,17 @@ export default {
     onSuccess: Function,
     onError: Function,
     onProgress: Function,
-    beforeUpload: Function
+    beforeUpload: Function,
+    httpRequest: {
+      type: Function,
+      default: () => ajax
+    }
   },
   data () {
     return {
       tempIndex: 1,
-      files: [] // 存储要展示的列表
+      files: [], // 存储要展示的列表
+      reqs: {} // 收集请求
     }
   },
   watch: {
@@ -67,6 +70,9 @@ export default {
         })
       }
     }
+  },
+  mounted () {
+    console.log(this)
   },
   methods: {
     handleClick () {
@@ -111,8 +117,28 @@ export default {
       }
     },
     // 真正的上传
-    post () {
+    post (rawFile) {
+      const uid = rawFile.uid
+      const options = {
+        file: rawFile,
+        filename: rawFile.name,
+        action: this.action,
+        onProgress: ev => {
 
+        },
+        onSuccess: res => {
+
+        },
+        onError: err => {
+          console.log(err)
+        }
+      }
+
+      const req = this.httpRequest(options)
+      this.reqs[uid] = req
+      if (req && req.then) {
+        req.then(options.onSuccess, options.onError)
+      }
     }
   }
 }
