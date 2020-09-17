@@ -1,6 +1,6 @@
-import Button from './button/button.vue'
-import ButtonGroup from './button/button-group.vue'
-import Icon from './icon.vue'
+import Button from './button/button'
+import ButtonGroup from './button/button-group'
+import Icon from './icon/icon'
 import Row from './layout/row'
 import Col from './layout/col'
 import Aside from './container/aside'
@@ -10,6 +10,7 @@ import Header from './container/header'
 import Main from './container/main'
 import Input from './input/input'
 import Upload from './upload/upload'
+import Progress from './progress/progress'
 
 const install = (Vue) => {
   Vue.component(Button.name, Button)
@@ -25,8 +26,8 @@ const install = (Vue) => {
   Vue.component(Main.name, Main)
 
   Vue.component(Input.name, Input)
-
   Vue.component(Upload.name, Upload)
+  Vue.component(Progress.name, Progress)
 }
 if (typeof window.Vue !== 'undefined') {
   // eslint-disable-next-line no-undef

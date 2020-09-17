@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import '../styles/iconfont'
+import '../../styles/iconfont'
 
 export default {
   name: 'zh-icon',

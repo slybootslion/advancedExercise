@@ -12,6 +12,7 @@
                :on-error="handleError"
                :on-progress="handleProgress"
                :before-upload="beforeUpload"
+               :drag="true"
     >
       <zh-button type="primary" icon="tabshouqi">点击上传</zh-button>
       <div slot="tip">只能上传jpg/png文件，且不超过500kb</div>

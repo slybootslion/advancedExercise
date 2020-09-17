@@ -1,27 +1,44 @@
 <template>
   <div class="zh-upload">
-    <div @click="handleClick" class="zh-upload-btn">
-      <slot></slot>
-    </div>
-    <input type="file"
-           class="input"
-           :accept="accept"
-           :multiple="multiple"
-           :name="name"
-           ref="input"
-           @change="handleChange"
-    />
+    <upload-dragger v-if="drag" :accept="accept" @file="uploadFiles"></upload-dragger>
+    <template v-else>
+      <div @click="handleClick" class="zh-upload-btn">
+        <slot></slot>
+      </div>
+      <input type="file"
+             class="input"
+             :accept="accept"
+             :multiple="multiple"
+             :name="name"
+             ref="input"
+             @change="handleChange"
+      />
+    </template>
     <div>
       <slot name="tip"></slot>
     </div>
+
+    <ul>
+      <li v-for="file in files" :key="file.uid">
+        <div class="list-item">
+          <zh-icon icon="shengqian" :size="20"/>
+          {{file.name}}
+          <zh-progress v-if="file.status === 'uploading'" :percentage="file.percentage"/>
+          {{file.status}}
+          <zh-icon icon="guanbi1" :size="14"/>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
 import ajax from './ajax'
+import UploadDragger from './upload-dragger'
 
 export default {
   name: 'zh-upload',
+  components: { UploadDragger },
   props: {
     name: {
       type: String,
@@ -50,6 +67,10 @@ export default {
     httpRequest: {
       type: Function,
       default: () => ajax
+    },
+    drag: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -148,12 +169,19 @@ export default {
       file.percentage = ev.percent || 0
       this.onProgress && this.onProgress(ev, rawFile)
     },
-    handleSuccess (rawFile) {
+    handleSuccess (res, rawFile) {
       const file = this.getFile(rawFile)
+      file.status = 'success'
+      this.onSuccess(res, rawFile)
+      this.onChange(file)
       console.log(file)
     },
-    handleError () {
-
+    handleError (err, rawFile) {
+      const file = this.getFile(rawFile)
+      file.status = 'fail'
+      this.onError(err, rawFile)
+      this.onChange(file)
+      delete this.reqs[file.uid]
     }
   }
 }
