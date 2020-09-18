@@ -28,8 +28,14 @@ export default {
       fileList: [
         { url: 'xxx', name: 'zfjg' },
         { url: 'xxx', name: 'zfjg' }
-      ]
+      ],
+      test2: 0
     }
+  },
+  mounted () {
+    setTimeout(() => {
+      this.test2 = 100
+    }, 5000)
   },
   methods: {
     handleExceed (files, fileList) {
