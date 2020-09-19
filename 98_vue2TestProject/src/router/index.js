@@ -22,7 +22,7 @@ const routes = [
   },
   {
     path: '/transition',
-    name: 'transition',
+    name: 'transition-comp',
     component: () => import(/* webpackChunkName: "transition" */ '../views/Transition/Transition')
   }
 ]

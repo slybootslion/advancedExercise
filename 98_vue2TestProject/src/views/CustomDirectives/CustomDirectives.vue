@@ -7,7 +7,7 @@
       <input type="text" v-focus="true" placeholder="自动获取焦点">
     </div>
 
-    <p>
+    <p style="margin-top: 40px;">
       <router-link to="/">home</router-link>
     </p>
   </div>
