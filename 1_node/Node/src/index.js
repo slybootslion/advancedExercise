@@ -1,1 +1,1 @@
-require('../Fs/Fs')
+require('../Stream')
