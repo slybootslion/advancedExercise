@@ -24,6 +24,26 @@ const routes = [
     path: '/transition',
     name: 'transition-comp',
     component: () => import(/* webpackChunkName: "transition" */ '../views/Transition/Transition')
+  },
+  {
+    path: '/event-bus',
+    name: 'event-bus1',
+    component: () => import(/* webpackChunkName: "eventBus" */ '../views/EventBus/EventBus')
+  },
+  {
+    path: '/v-model',
+    name: 'v-model',
+    component: () => import(/* webpackChunkName: "eventBus" */ '../views/V-Model/V-Model')
+  },
+  {
+    path: '/dispatch',
+    name: 'dispatch',
+    component: () => import(/* webpackChunkName: "DispatchBroadcast" */ '../views/DispatchBroadcast/Dispatch')
+  },
+  {
+    path: '/provide-inject',
+    name: 'provide-inject',
+    component: () => import(/* webpackChunkName: "ProvideInject" */ '../views/ProvideInject/ProvideInject')
   }
 ]
 

@@ -11,6 +11,7 @@ import Main from './container/main'
 import Input from './input/input'
 import Upload from './upload/upload'
 import Progress from './progress/progress'
+import Dialog from './dialog/dialog'
 
 const install = (Vue) => {
   Vue.component(Button.name, Button)
@@ -28,6 +29,8 @@ const install = (Vue) => {
   Vue.component(Input.name, Input)
   Vue.component(Upload.name, Upload)
   Vue.component(Progress.name, Progress)
+
+  Vue.component(Dialog.name, Dialog)
 }
 if (typeof window.Vue !== 'undefined') {
   // eslint-disable-next-line no-undef

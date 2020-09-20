@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <zh-upload name="avatar"
+
+    <!--<zh-upload name="avatar"
                action="http://loacalhost:3000/upload"
                :file-list="fileList"
                :limit="3"
@@ -16,7 +17,10 @@
     >
       <zh-button type="primary" icon="tabshouqi">点击上传</zh-button>
       <div slot="tip">只能上传jpg/png文件，且不超过500kb</div>
-    </zh-upload>
+    </zh-upload>-->
+
+    <zh-dialog></zh-dialog>
+    <button @click="showDialog">显示弹框</button>
   </div>
 </template>
 
@@ -61,6 +65,10 @@ export default {
         return false
       }
       return true
+    },
+    // 弹框相关
+    showDialog () {
+
     }
   }
 }
