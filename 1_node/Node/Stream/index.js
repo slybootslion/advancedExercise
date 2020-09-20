@@ -19,7 +19,7 @@ const { ReadStream } = require('./ReadStream')
 
 const rs = new ReadStream(path.resolve(__dirname, examplePath))
 
-return
+// return
 rs.on('error', err => {
   console.log('出错了', err)
 })
@@ -36,6 +36,7 @@ rs.on('data', chunk => {
 
 rs.on('end', () => {
   // 拼接buffer 转字符串
+  console.log(arr)
   console.log(Buffer.concat(arr).toString())
   console.log('读取完毕')
 })
