@@ -44,6 +44,11 @@ const routes = [
     path: '/provide-inject',
     name: 'provide-inject',
     component: () => import(/* webpackChunkName: "ProvideInject" */ '../views/ProvideInject/ProvideInject')
+  },
+  {
+    path: '/lazyload',
+    name: 'lazyload',
+    component: () => import(/* webpackChunkName: "Lazyload" */ '../views/Lazyload/Lazyload')
   }
 ]
 

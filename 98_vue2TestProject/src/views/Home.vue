@@ -7,6 +7,7 @@
     <router-link to="/v-model">V-Model</router-link>
     <router-link to="/provide-inject">Provide/Inject</router-link>
     <router-link to="/dispatch">$dispatch/$broadcast</router-link>
+    <router-link to="/lazyload">lazyload</router-link>
   </div>
 </template>
 

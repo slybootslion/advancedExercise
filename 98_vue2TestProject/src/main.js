@@ -3,6 +3,10 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
+import api from './api'
+
+import VueLazyload from './plugins/lazyload'
+
 Vue.prototype.$bus = new Vue()
 Vue.prototype.$dispatch = function (eventName, componentName, value) {
   let target = this.$parent
@@ -55,6 +59,15 @@ Vue.prototype.$broadcast = function (eventName, componentName, value) {
 
   broadcast(children)
 }
+
+Vue.prototype.$api = api
+
+const loadingPic = 'https://static.uniformfox.com/images/slybootslion/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/20200522/8fb9d2affc21dfce5ec7f3239c002799.png'
+
+Vue.use(VueLazyload, {
+  preLoad: 1.3,
+  loading: loadingPic
+})
 
 Vue.config.productionTip = false
 
