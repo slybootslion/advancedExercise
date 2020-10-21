@@ -25,8 +25,16 @@ const Promise = require('./promise')
 
 const p = new Promise((resolve, reject) => {
   console.log(1)
-  reject('失败')
-  resolve('成功')
+  setTimeout(() => {
+    resolve('成功')
+    reject('失败')
+  }, 500)
+})
+
+p.then((data) => {
+  console.log(data)
+}, (reason) => {
+  console.log(reason)
 })
 
 p.then((data) => {
