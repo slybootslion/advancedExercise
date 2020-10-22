@@ -1,5 +1,5 @@
 const fs = require('fs')
-// const Promise = require('./promise')
+const Promise = require('./promise')
 
 // read file promisify
 function read (...args) {
@@ -29,5 +29,7 @@ catch就是then的别名，没有成功只有失败的then
 */
 
 read('file.txt', 'utf8').then(data => {
-  return 100
-}).then(data => console.log(data))
+  return new Promise((resolve, reject) => {
+    resolve({ content: data })
+  })
+}).then().then().then(data => console.log(data))
