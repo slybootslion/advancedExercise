@@ -36,20 +36,45 @@ class Promise {
   }
 
   then (onFulfilled, onRejected) {
-    if (this.status === STATUS.FULFILLED) {
-      onFulfilled(this.value)
-    }
-    if (this.status === STATUS.REJECTED) {
-      onRejected(this.reason)
-    }
-    if (this.status === STATUS.PENDING) {
-      this.onResolvedCallbacks.push(() => {
-        onFulfilled(this.value)
-      })
-      this.onRejectedCallbacks.push(() => {
-        onRejected(this.reason)
-      })
-    }
+    let promise2 = new Promise((resolve, reject) => {
+      if (this.status === STATUS.FULFILLED) {
+        try {
+          const x = onFulfilled(this.value)
+          resolve(x)
+        } catch (err) {
+          reject(err)
+        }
+      }
+      if (this.status === STATUS.REJECTED) {
+        try {
+          const x = onRejected(this.reason)
+          resolve(x)
+        } catch (err) {
+          reject(err)
+        }
+      }
+      if (this.status === STATUS.PENDING) {
+        this.onResolvedCallbacks.push(() => {
+          try {
+            const x = onFulfilled(this.value)
+            resolve(x)
+          } catch (err) {
+            reject(err)
+          }
+        })
+        this.onRejectedCallbacks.push(() => {
+          try {
+            const x = onRejected(this.reason)
+            resolve(x)
+          } catch (err) {
+            reject(err)
+          }
+        })
+      }
+    })
+
+
+    return promise2
   }
 }
 
