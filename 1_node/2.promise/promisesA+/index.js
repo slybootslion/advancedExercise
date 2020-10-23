@@ -28,7 +28,7 @@ catch就是then的别名，没有成功只有失败的then
 错误会就近优先处理，处理不了就走下一层
 */
 
-read('file.txt', 'utf8').then(data => {
+read('../testfile.txt', 'utf8').then(data => {
   return new Promise((resolve, reject) => {
     resolve({ content: data })
   })
