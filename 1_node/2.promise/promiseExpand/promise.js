@@ -139,15 +139,49 @@ class Promise {
     return this.then(null, err)
   }
 
+  // 静态resolve
   static resolve (val) {
     return new Promise((resolve, reject) => {
       resolve(val)
     })
   }
 
+  // 静态reject
   static reject (reason) {
     return new Promise((resolve, reject) => {
       reject(reason)
+    })
+  }
+
+  // 静态all方法
+  static all (promises) {
+
+    function isPromise (x) {
+      let then = x && x.then
+      return typeof then === 'function'
+    }
+
+    return new Promise((resolve, reject) => {
+      let result = []
+      let c = 0
+
+      function processData (i, data) {
+        result[i] = data
+        if (++c === promises.length) {
+          resolve(result)
+        }
+      }
+
+      for (let i = 0; i < promises.length; i++) {
+        let p = promises[i]
+        if (isPromise(p)) {
+          // promise
+          p.then(res => processData(i, res), reject)
+        } else {
+          // 普通值
+          processData(i, p)
+        }
+      }
     })
   }
 }

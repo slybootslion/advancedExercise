@@ -30,3 +30,12 @@ Promise.resolve(p0).then(res => console.log(res))
 * 静态方法reject 和 catch
 * */
 Promise.reject(p0).catch(err => console.log(err))
+
+/*
+* promise all
+* */
+const fsp = require('fs').promises
+let getFile1 = fsp.readFile('../testfile.txt', 'utf8')
+let getFile2 = fsp.readFile('../testfile.txt', 'utf8')
+
+Promise.all([1, getFile1, getFile2, 2]).then(res => console.log(res))
