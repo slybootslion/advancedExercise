@@ -184,6 +184,17 @@ class Promise {
       }
     })
   }
+
+  // finally方法
+  finally (callback) {
+    return this.then(data => {
+      return Promise.resolve(callback()).then(() => data)
+    }, err => {
+      return Promise.resolve(callback()).then(() => {
+        throw err
+      })
+    })
+  }
 }
 
 Promise.defer = Promise.deferred = function () {

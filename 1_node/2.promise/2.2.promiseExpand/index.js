@@ -39,3 +39,19 @@ let getFile1 = fsp.readFile('../testfile.txt', 'utf8')
 let getFile2 = fsp.readFile('../testfile.txt', 'utf8')
 
 Promise.all([1, getFile1, getFile2, 2]).then(res => console.log(res))
+
+/*
+* promise  finally
+* */
+Promise.reject(123).finally(data => {
+  console.log('finally')
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve('finally ok')
+    }, 1000)
+  })
+}).then(data => {
+  console.log('finally then', data)
+}, err => {
+  console.log('finally err', err)
+}).catch(err => console.log('finally catch:', err))
