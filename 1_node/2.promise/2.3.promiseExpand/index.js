@@ -38,7 +38,13 @@ const fsp = require('fs').promises
 let getFile1 = fsp.readFile('../testfile.txt', 'utf8')
 let getFile2 = fsp.readFile('../testfile.txt', 'utf8')
 
-Promise.all([1, getFile1, getFile2, 2]).then(res => console.log(res))
+Promise.all([1, getFile1, getFile2, 2]).then(data => console.log('all', data))
+
+/*
+* promise race
+* */
+
+Promise.race([getFile2, getFile1]).then(data => console.log('race', data))
 
 /*
 * promise  finally

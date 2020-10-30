@@ -4,6 +4,11 @@ const STATUS = {
   REJECTED: 'REJECTED'
 }
 
+function isPromise (x) {
+  let then = x && x.then
+  return typeof then === 'function'
+}
+
 function resolvePromise (x, promise2, resolve, reject) {
   // x如果是promise，就采用x的状态（成功或者失败）
   // If promise and x refer to the same object, reject promise with a TypeError as the reason.
@@ -155,12 +160,6 @@ class Promise {
 
   // 静态all方法
   static all (promises) {
-
-    function isPromise (x) {
-      let then = x && x.then
-      return typeof then === 'function'
-    }
-
     return new Promise((resolve, reject) => {
       let result = []
       let c = 0
@@ -180,6 +179,20 @@ class Promise {
         } else {
           // 普通值
           processData(i, p)
+        }
+      }
+    })
+  }
+
+  // 静态race
+  static race (promises) {
+    return new Promise((resolve, reject) => {
+      for (let i = 0; i < promises.length; i++) {
+        const current = promises[i]
+        if (isPromise(current)) {
+          current.then(resolve, reject)
+        } else {
+          resolve(current)
         }
       }
     })
