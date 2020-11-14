@@ -38,7 +38,7 @@ class Application extends EventEmitter {
     // dispatch就是next()函数
     let count = -1 // 防止next被调用多次
     const dispatch = async (c) => {
-      if (count === c) return Promise.reject('next() called multiples')
+      if (c <= count) return Promise.reject('next() called multiples')
       if (c === this.middlewares.length) return Promise.resolve()
       count = c
       const mw = this.middlewares[c]
@@ -74,7 +74,8 @@ class Application extends EventEmitter {
       this.emit('error', err)
     })
 
-    this.on('error', () => {
+    this.on('error', (err) => {
+      console.log(err)
       res.statusCode = 500
       res.end('Internal Error')
     })

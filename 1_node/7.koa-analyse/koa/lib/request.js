@@ -8,7 +8,19 @@ module.exports = {
   },
 
   get query () {
-    let { query } = url.parse(this.req.url, true)
+    const { query } = url.parse(this.req.url, true)
     return query
+  },
+
+  get method () {
+    return this.req.method
+  },
+
+  get header () {
+    return this.req.headers;
+  },
+
+  set header (val) {
+    this.req.headers = val;
   }
 }

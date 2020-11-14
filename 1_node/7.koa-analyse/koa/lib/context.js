@@ -18,7 +18,11 @@ function defineSetter (target, key) {
 
 // 代理实现
 defineGetter('request', 'path')
+defineGetter('request', 'method')
 defineGetter('request', 'url')
+defineGetter('request', 'get')
 defineGetter('response', 'body')
+defineGetter('response', 'set')
+defineGetter('response', 'get')
 
 defineSetter('response', 'body')
