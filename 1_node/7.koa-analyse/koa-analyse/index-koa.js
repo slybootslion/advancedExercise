@@ -52,11 +52,11 @@ app.use(async (ctx, next) => {
 
 // 错误处理
 app.on('error', (params) => {
-  console.log('*******')
+  console.log('****error msg****')
   console.log(params)
-  console.log('*******')
+  console.log('****error msg****')
 })
 
 app.listen(10000, () => {
-  console.log('监听10000端口')
+  console.log('index koa: 监听10000端口')
 })

@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "nodemon index-koa.js"
+    "dev": "nodemon index-koa.js",
+    "dev2": "nodemon index-bodyparser.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "koa": "^2.13.0"
+    "koa": "^2.13.0",
+    "querystring": "^0.2.0",
+    "uuid": "^8.3.1"
   }
 }

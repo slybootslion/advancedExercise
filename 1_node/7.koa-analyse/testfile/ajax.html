@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+
+<body>
+  <button id="btn">发送请求</button>
+  <div id="txt"></div>
+  <script>
+    const btn = document.querySelector('#btn')
+    const txt = document.querySelector('#txt')
+    btn.addEventListener('click', sendAjax)
+
+    function sendAjax() {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/login', true)
+      xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.onload = function () {
+        txt.innerHTML = JSON.stringify(xhr.response)
+      }
+      xhr.send(JSON.stringify({ username: 'name', password: 'code' }))
+    }
+
+  </script>
+</body>
+
+</html>
