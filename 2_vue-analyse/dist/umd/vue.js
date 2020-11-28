@@ -42,18 +42,14 @@
     return Constructor;
   }
 
-  function isObject(obj) {
-    return _typeof(obj) === 'object' && obj != null;
-  }
-
   function defineReactive(data, key, value) {
     Object.defineProperty(data, key, {
       get: function get() {
         return value;
       },
-      set: function set(newValue) {
-        if (value === newValue) return false;
-        value = newValue;
+      set: function set(nValue) {
+        if (nValue === value) return;
+        value = nValue;
       }
     });
   }
@@ -69,7 +65,8 @@
       key: "walk",
       value: function walk(data) {
         Object.keys(data).forEach(function (key) {
-          defineReactive(data, key, data[key]);
+          var val = data[key];
+          defineReactive(data, key, val);
         });
       }
     }]);
@@ -78,47 +75,47 @@
   }();
 
   function observe(data) {
-    // 判断是否对象类型
-    if (!isObject(data)) return false; // Observer类 方便扩展
-
-    var ob = new Observer(data);
-  }
-
-  function proxy(vm, souce, key) {
-    Object.defineProperty(vm, key, {
-      get: function get() {
-        return vm[souce][key];
-      },
-      set: function set(newValue) {
-        vm[souce][key] = newValue;
-      }
-    });
-  }
-
-  function initData(vm) {
-    var data = vm.$opitions.data; // 通过vm._data获取劫持后的数据
-
-    data = vm._data = typeof data === 'function' ? data.call(vm) : data; // 将_data中的值放在实例上（vm）
-
-    for (var key in data) {
-      proxy(vm, '_data', key);
-    }
-
-    observe(data);
+    if (_typeof(data) !== 'object' || data == null) return;
+    return new Observer(data);
   }
 
   function initState(vm) {
-    var opts = vm.$opitions; // 初始化的数据
+    // 将所有的数据定义在vm上，后续更改时，触发试图的更新
+    var opts = vm.$options;
 
     if (opts.data) {
       initData(vm);
     }
   }
 
+  function proxy(vm, source, key) {
+    Object.defineProperty(vm, key, {
+      get: function get() {
+        return vm[source][key];
+      },
+      set: function set(nValue) {
+        vm[source][key] = nValue;
+      }
+    });
+  }
+
+  function initData(vm) {
+    var data = vm.$options.data;
+    data = vm._data = typeof data === 'function' ? data.call(vm) : data;
+
+    for (var dataKey in data) {
+      proxy(vm, '_data', dataKey);
+    } // 观测数据
+
+
+    observe(data);
+  }
+
   function initMixin(Vue) {
+    // Vue的初始化
     Vue.prototype._init = function (options) {
       var vm = this;
-      vm.$opitions = options;
+      vm.$options = options;
       initState(vm);
     };
   }

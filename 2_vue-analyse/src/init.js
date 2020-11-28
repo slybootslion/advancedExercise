@@ -1,10 +1,12 @@
 import { initState } from "./state";
 
-export function initMixin (Vue) {
+function initMixin(Vue) {
+  // Vue的初始化
   Vue.prototype._init = function (options) {
     const vm = this
-    vm.$opitions = options
+    vm.$options = options
     initState(vm)
   }
 }
 
+export { initMixin }

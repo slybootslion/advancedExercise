@@ -1,32 +1,31 @@
-import { isObject } from "../utils/utils";
-
-export function defineReactive (data, key, value) {
+function defineReactive(data, key, value) {
   Object.defineProperty(data, key, {
-    get () {
+    get() {
       return value
     },
-    set (newValue) {
-      if (value === newValue) return false
-      value = newValue
-    }
+    set(nValue) {
+      if (nValue === value) return
+      value = nValue
+    },
   })
 }
 
 class Observer {
-  constructor (value) {
+  constructor(value) {
     this.walk(value)
   }
 
-  walk (data) {
+  walk(data) {
     Object.keys(data).forEach(key => {
-      defineReactive(data, key, data[key])
+      const val = data[key]
+      defineReactive(data, key, val)
     })
   }
 }
 
-export function observe (data) {
-  // 判断是否对象类型
-  if (!isObject(data)) return false
-  // Observer类 方便扩展
-  const ob = new Observer(data)
+function observe(data) {
+  if (typeof data !== 'object' || data == null) return
+  return new Observer(data)
 }
+
+export { observe }

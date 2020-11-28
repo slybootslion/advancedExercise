@@ -7,17 +7,17 @@ export default {
     format: 'umd',
     file: './dist/umd/vue.js',
     name: 'Vue',
-    sourcemap: true
+    sourcemap: true,
   },
   plugins: [
     babel({
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
     }),
     serve({
       open: true,
       openPage: '/public/index.html',
-      port: 3000,
-      contentBase: ''
-    })
-  ]
+      port: 10000,
+      contentBase: '',
+    }),
+  ],
 }
