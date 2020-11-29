@@ -1,10 +1,15 @@
+import { arrayMethods } from './array'
+
 function defineReactive(data, key, value) {
+  observe(value) // 对结果，递归拦截
+
   Object.defineProperty(data, key, {
     get() {
       return value
     },
     set(nValue) {
       if (nValue === value) return
+      observe(nValue)
       value = nValue
     },
   })
@@ -12,7 +17,13 @@ function defineReactive(data, key, value) {
 
 class Observer {
   constructor(value) {
-    this.walk(value)
+    if (Array.isArray(value)) {
+      // value.__proto__ = arrayMethods
+      Object.setPrototypeOf(value, arrayMethods)
+      this.observeArray(value)
+    } else {
+      this.walk(value)
+    }
   }
 
   walk(data) {
@@ -20,6 +31,12 @@ class Observer {
       const val = data[key]
       defineReactive(data, key, val)
     })
+  }
+
+  observeArray(arr) {
+    for (let i = 0; i < arr.length; i++) {
+      observe(arr[i])
+    }
   }
 }
 

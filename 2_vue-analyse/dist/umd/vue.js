@@ -42,13 +42,36 @@
     return Constructor;
   }
 
+  var oldArrayProtoMethods = Array.prototype;
+  var arrayMethods = Object.create(oldArrayProtoMethods);
+  var methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
+  methods.forEach(function (method) {
+    //AOP
+    // 重写数组方法
+    arrayMethods[method] = function () {
+      var _oldArrayProtoMethods;
+
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var result = (_oldArrayProtoMethods = oldArrayProtoMethods[method]).call.apply(_oldArrayProtoMethods, [this].concat(args));
+
+      console.log('数组变化');
+      return result;
+    };
+  });
+
   function defineReactive(data, key, value) {
+    observe(value); // 对结果，递归拦截
+
     Object.defineProperty(data, key, {
       get: function get() {
         return value;
       },
       set: function set(nValue) {
         if (nValue === value) return;
+        observe(nValue);
         value = nValue;
       }
     });
@@ -58,7 +81,13 @@
     function Observer(value) {
       _classCallCheck(this, Observer);
 
-      this.walk(value);
+      if (Array.isArray(value)) {
+        // value.__proto__ = arrayMethods
+        Object.setPrototypeOf(value, arrayMethods);
+        this.observeArray(value);
+      } else {
+        this.walk(value);
+      }
     }
 
     _createClass(Observer, [{
@@ -68,6 +97,13 @@
           var val = data[key];
           defineReactive(data, key, val);
         });
+      }
+    }, {
+      key: "observeArray",
+      value: function observeArray(arr) {
+        for (var i = 0; i < arr.length; i++) {
+          observe(arr[i]);
+        }
       }
     }]);
 
