@@ -17,6 +17,13 @@ function defineReactive(data, key, value) {
 
 class Observer {
   constructor(value) {
+    // value.__ob__ = this
+    Object.defineProperty(value, '__ob__', {
+      value: this,
+      enumerable: false,
+      configurable: false
+    })
+
     if (Array.isArray(value)) {
       // value.__proto__ = arrayMethods
       Object.setPrototypeOf(value, arrayMethods)
@@ -42,6 +49,7 @@ class Observer {
 
 function observe(data) {
   if (typeof data !== 'object' || data == null) return
+  if (data.__ob__) return
   return new Observer(data)
 }
 

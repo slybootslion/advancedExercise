@@ -9,7 +9,20 @@ methods.forEach(method => {
   // 重写数组方法
   arrayMethods[method] = function (...args) {
     const result = oldArrayProtoMethods[method].call(this, ...args)
-    console.log('数组变化')
+    let inserted
+    const ob = this.__ob__
+    switch (method) {
+      case 'push':
+      case 'unshift':
+        inserted = args
+        break
+      case 'splice':
+        inserted = args.slice(2)
+        break
+      default:
+        break
+    }
+    if (inserted) ob.observeArray(inserted)
     return result
   }
 })

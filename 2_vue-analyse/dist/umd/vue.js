@@ -57,7 +57,21 @@
 
       var result = (_oldArrayProtoMethods = oldArrayProtoMethods[method]).call.apply(_oldArrayProtoMethods, [this].concat(args));
 
-      console.log('数组变化');
+      var inserted;
+      var ob = this.__ob__;
+
+      switch (method) {
+        case 'push':
+        case 'unshift':
+          inserted = args;
+          break;
+
+        case 'splice':
+          inserted = args.slice(2);
+          break;
+      }
+
+      if (inserted) ob.observeArray(inserted);
       return result;
     };
   });
@@ -80,6 +94,13 @@
   var Observer = /*#__PURE__*/function () {
     function Observer(value) {
       _classCallCheck(this, Observer);
+
+      // value.__ob__ = this
+      Object.defineProperty(value, '__ob__', {
+        value: this,
+        enumerable: false,
+        configurable: false
+      });
 
       if (Array.isArray(value)) {
         // value.__proto__ = arrayMethods
@@ -112,6 +133,7 @@
 
   function observe(data) {
     if (_typeof(data) !== 'object' || data == null) return;
+    if (data.__ob__) return;
     return new Observer(data);
   }
 
@@ -147,12 +169,165 @@
     observe(data);
   }
 
+  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*";
+  var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")");
+  var startTagOpen = new RegExp("^<".concat(qnameCapture)); // 标签开头的正则 捕获的内容是标签名
+
+  var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]*>")); // 匹配结尾的标签 </div>
+
+  var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性
+
+  var startTagClose = /^\s*(\/?)>/; // 匹配结束的标签 >
+
+  function parseHTML(html) {
+    // 生成ast语法树
+    function createASTElement(tag, attrs) {
+      return {
+        tag: tag,
+        type: 1,
+        children: [],
+        attrs: attrs,
+        parent: null
+      };
+    }
+
+    var root = null;
+    var currentParent;
+    var stack = [];
+
+    function advance(n) {
+      html = html.substring(n);
+    }
+
+    function start(tagName, attrs) {
+      var element = createASTElement(tagName, attrs);
+
+      if (!root) {
+        root = element;
+      }
+
+      currentParent = element;
+      stack.push(element);
+    }
+
+    function end(tagName) {
+      var element = stack.pop();
+      currentParent = stack[stack.length - 1];
+
+      if (currentParent) {
+        element.parent = currentParent;
+        currentParent.children.push(element);
+      }
+    }
+
+    function chars(text) {
+      text = text.replace(/\s/g, '');
+
+      if (text) {
+        currentParent.children.push({
+          type: 3,
+          text: text
+        });
+      }
+    }
+
+    function parseStartTag() {
+      var start = html.match(startTagOpen);
+
+      if (start) {
+        var match = {
+          tagName: start[1],
+          attrs: []
+        };
+        advance(start[0].length); // 查找属性 （开始标签开头和结尾中间的部分）
+
+        var _end, attr;
+
+        while (!(_end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+          advance(attr[0].length);
+          match.attrs.push({
+            name: attr[1],
+            value: attr[3] || attr[4] || attr[5] || true
+          });
+        }
+
+        if (_end) {
+          advance(_end[0].length);
+          return match;
+        }
+      }
+    }
+
+    while (html) {
+      var textEnd = html.indexOf('<');
+
+      if (textEnd === 0) {
+        // 开始标签
+        var startTagMatch = parseStartTag();
+
+        if (startTagMatch) {
+          start(startTagMatch.tagName, startTagMatch.attrs);
+          continue;
+        } // 结束标签
+
+
+        var endTagMatch = html.match(endTag);
+
+        if (endTagMatch) {
+          advance(endTagMatch[0].length);
+          end(endTagMatch[1]);
+          continue;
+        }
+      }
+
+      var text = void 0;
+
+      if (textEnd > 0) {
+        text = html.substring(0, textEnd);
+      }
+
+      if (text) {
+        advance(text.length);
+        chars(text);
+      }
+    }
+
+    return root;
+  }
+
+  function generate(ast) {}
+
+  function compileToFunctions(template) {
+    var ast = parseHTML(template);
+    var code = generate();
+    console.log(code);
+  }
+
   function initMixin(Vue) {
     // Vue的初始化
     Vue.prototype._init = function (options) {
       var vm = this;
       vm.$options = options;
       initState(vm);
+
+      if (vm.$options.el) {
+        vm.$mount(vm.$options.el);
+      }
+    };
+
+    Vue.prototype.$mount = function (el) {
+      el = document.querySelector(el);
+      var options = this.$options;
+
+      if (!options.render) {
+        var template = options.template;
+
+        if (!template && el) {
+          template = el.outerHTML;
+        }
+
+        options.render = compileToFunctions(template);
+      }
     };
   }
 
