@@ -377,6 +377,34 @@
     return new Function(render);
   }
 
+  var id = 0;
+
+  var Watcher = function Watcher(vm, fn, cb, options) {
+    _classCallCheck(this, Watcher);
+
+    this.vm = vm;
+    this.fn = fn;
+    this.cb = cb;
+    this.options = options;
+    this.id = id++;
+    this.fn();
+  };
+
+  function mountComponent(vm, el) {
+    var updateComponent = function updateComponent() {
+      vm._update(vm._render());
+    }; // 默认通过watcher渲染
+
+
+    new Watcher(vm, updateComponent, function () {}, true);
+  }
+
+  function lifecycleMixin(Vue) {
+    Vue.prototype._update = function (vNode) {
+      console.log('update');
+    };
+  }
+
   function initMixin(Vue) {
     // Vue的初始化
     Vue.prototype._init = function (options) {
@@ -391,6 +419,7 @@
 
     Vue.prototype.$mount = function (el) {
       el = document.querySelector(el);
+      var vm = this;
       var options = this.$options;
 
       if (!options.render) {
@@ -401,8 +430,26 @@
         }
 
         options.render = compileToFunctions(template);
-        console.log(options.render);
-      }
+      } // 组件挂载
+
+
+      mountComponent(vm);
+    };
+  }
+
+  function renderMixin(Vue) {
+    // 任务8：8.产生虚拟dom 14分
+    Vue.prototype._c = function () {};
+
+    Vue.prototype._v = function () {};
+
+    Vue.prototype._s = function () {};
+
+    Vue.prototype._render = function () {
+      var vm = this;
+      var render = vm.$options.render;
+      var vNode = render.call(vm);
+      return vNode;
     };
   }
 
@@ -411,6 +458,8 @@
   }
 
   initMixin(Vue);
+  lifecycleMixin(Vue);
+  renderMixin(Vue);
 
   return Vue;
 
