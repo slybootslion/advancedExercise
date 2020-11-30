@@ -5,11 +5,12 @@
   <title>Vue实现</title>
 </head>
 <body>
-<div id="app">
-  <p a="1" b="2" c="3">{{name}}</p>
-  <p at="@">{{num}}</p>
-  <p>{{arr}}</p>
-  <p>{{obj.a}}</p>
+<div id="app" at="p">
+  <p a="1" b="2" c="3">name:{{name}}</p>
+  {{obj.a}} hello vue {{obj.b}} hahaha
+  <p at="@">num:{{num}}</p>
+  <p style="color: red;background:yellow">{{arr}}</p>
+  <p>hello vue</p>
 </div>
 <script src="/dist/umd/vue.js" charset="utf-8"></script>
 <script type="text/javascript" charset="utf-8">

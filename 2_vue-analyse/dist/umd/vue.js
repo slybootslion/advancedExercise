@@ -221,7 +221,7 @@
     }
 
     function chars(text) {
-      text = text.replace(/\s/g, '');
+      text = text.trim();
 
       if (text) {
         currentParent.children.push({
@@ -295,12 +295,86 @@
     return root;
   }
 
-  function generate(ast) {}
+  var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
+
+  function genAttr(attrs) {
+    var str = '';
+
+    for (var i = 0; i < attrs.length; i++) {
+      var attr = attrs[i];
+
+      if (attr.name === 'style') {
+        (function () {
+          var obj = {};
+          attr.value.split(';').forEach(function (item) {
+            var itemArr = item.split(':');
+            obj[itemArr[0]] = itemArr[1];
+          });
+          attr.value = obj;
+        })();
+      }
+
+      str += "".concat(attr.name, ": ").concat(JSON.stringify(attr.value), ",");
+    }
+
+    return "{ ".concat(str.slice(0, -1), "}");
+  } // 区分元素还是文本
+
+
+  function gen(child) {
+    if (child.type === 1) {
+      // 元素
+      return genChildren(child.children);
+    } else {
+      // 文本
+      var t = child.text;
+
+      if (defaultTagRE.test(t)) {
+        // 插值表达式
+        var tokens = [];
+        var match;
+        var index = 0;
+        var lastIdx = defaultTagRE.lastIndex = 0;
+
+        while (match = defaultTagRE.exec(t)) {
+          index = match.index;
+
+          if (index > lastIdx) {
+            tokens.push(JSON.stringify(t.slice(lastIdx, index)));
+          }
+
+          tokens.push("_s(".concat(match[1].trim(), ")"));
+          lastIdx = index + match[0].length;
+        }
+
+        if (lastIdx < t.length) tokens.push(JSON.stringify(t.slice(lastIdx)));
+        return "_v(".concat(tokens.join('+'), ")");
+      } else {
+        // 普通文本
+        return "_v(".concat(JSON.stringify(t), ")");
+      }
+    }
+  }
+
+  function genChildren(children) {
+    if (children) {
+      return children.map(function (child) {
+        return gen(child);
+      }).join(',');
+    }
+  } // ast -> str -> Function
+
+
+  function generate(ast) {
+    return "_c('".concat(ast.tag, "', ").concat(ast.attrs.length ? genAttr(ast.attrs) : undefined, " ").concat(ast.children ? ",".concat(genChildren(ast.children)) : '', ")");
+  }
 
   function compileToFunctions(template) {
     var ast = parseHTML(template);
-    var code = generate();
-    console.log(code);
+    var code = generate(ast);
+    var render = "with(this) {\n    return ".concat(code, "\n  }"); // 字符串变函数
+
+    return new Function(render);
   }
 
   function initMixin(Vue) {
@@ -327,6 +401,7 @@
         }
 
         options.render = compileToFunctions(template);
+        console.log(options.render);
       }
     };
   }

@@ -1,5 +1,5 @@
 import { initState } from './state'
-import { compileToFunctions } from "./compiler/index";
+import { compileToFunctions } from './compiler/index'
 
 function initMixin(Vue) {
   // Vue的初始化
@@ -23,6 +23,7 @@ function initMixin(Vue) {
         template = el.outerHTML
       }
       options.render = compileToFunctions(template)
+      console.log(options.render)
     }
   }
 }
