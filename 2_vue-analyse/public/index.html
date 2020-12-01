@@ -10,7 +10,8 @@
   <p a="1" b="2" c="3">name:{{name}}</p>
   {{obj.a}} hello vue {{obj.b}} hahaha
   <p at="@">num:{{num}}</p>
-  <p style="color: red;background:yellow">{{arr}}</p>
+  {{arr}}
+  <p style="color: red;background:yellow">{{obj.a}}</p>
   <p><span>hello vue</span></p>
 </div>
 
@@ -21,7 +22,7 @@ const vm = new Vue({
   data () {
     return {
       name: 'bd',
-      arr: [1, 3, 5, { b: 3 }],
+      arr: [1, [3], 5, { a: 1 }],
       num: 1,
       obj: {
         a: 1,
@@ -32,9 +33,11 @@ const vm = new Vue({
 })
 
 setTimeout(() => {
-  vm.name = 'gg'
-  vm.num = 100
-  vm.obj.a = 10
+  // vm.name = 'gg'
+  // vm.num = 100
+  // vm.obj.a = 10
+  vm.arr[1].push(666)
+  // vm.$nextTick(() => console.log(vm.$options.el.innerHTML))
   // vm._update(vm._render())
 }, 1000)
 </script>

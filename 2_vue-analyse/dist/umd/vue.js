@@ -72,6 +72,7 @@
       }
 
       if (inserted) ob.observeArray(inserted);
+      ob.dep.notify();
       return result;
     };
   });
@@ -122,14 +123,27 @@
     Dep.target = null;
   }
 
+  function dependArray(value) {
+    for (var i = 0; i < value.length; i++) {
+      var item = value[i];
+      item.__ob__ && item.__ob__.dep.depend();
+      if (Array.isArray(item)) dependArray(item);
+    }
+  }
+
   function defineReactive(data, key, value) {
-    observe(value); // 对结果，递归拦截
+    var dataOb = observe(value); // 对结果，递归拦截
 
     var dep = new Dep();
     Object.defineProperty(data, key, {
       get: function get() {
         if (Dep.target) {
           dep.depend();
+
+          if (dataOb) {
+            dataOb.dep.depend();
+            if (Array.isArray(value)) dependArray(value);
+          }
         }
 
         return value;
@@ -148,6 +162,7 @@
       _classCallCheck(this, Observer);
 
       // value.__ob__ = this
+      this.dep = new Dep();
       Object.defineProperty(value, '__ob__', {
         value: this,
         enumerable: false,
@@ -429,6 +444,59 @@
     return new Function(render);
   }
 
+  var fns = [];
+  var waiting = false;
+
+  function flushCallback() {
+    for (var i = 0; i < fns.length; i++) {
+      var fn = fns[i];
+      fn();
+    }
+
+    fns = [];
+    waiting = false;
+  }
+
+  function nextTick(fn) {
+    fns.push(fn);
+
+    if (!waiting) {
+      // Vue3只使用了Promise其他兼容降级处理的过时玩意儿就不写了
+      Promise.resolve().then(flushCallback);
+      waiting = true;
+    }
+  }
+
+  var has = {};
+  var queue = [];
+  var waiting$1 = false;
+
+  function flushSchedulerQueue() {
+    for (var i = 0; i < queue.length; i++) {
+      var watcher = queue[i];
+      watcher.run();
+    }
+
+    queue = [];
+    has = {};
+    waiting$1 = false;
+  }
+
+  function queueWatcher(watcher) {
+    // 更新时对watcher去重
+    var id = watcher.id;
+
+    if (has[id] == null) {
+      queue.push(watcher);
+      has[id] = true; // Promise.resolve().then(flushSchedulerQueue)
+
+      if (!waiting$1) {
+        nextTick(flushSchedulerQueue);
+        waiting$1 = true;
+      }
+    }
+  }
+
   var id$1 = 0;
 
   var Watcher = /*#__PURE__*/function () {
@@ -465,9 +533,14 @@
         }
       }
     }, {
+      key: "run",
+      value: function run() {
+        this.get();
+      }
+    }, {
       key: "update",
       value: function update() {
-        this.get();
+        queueWatcher(this);
       }
     }]);
 
@@ -579,6 +652,8 @@
 
       mountComponent(vm);
     };
+
+    Vue.prototype.$nextTick = nextTick;
   }
 
   function createElement(vm, tag) {

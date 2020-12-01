@@ -1,13 +1,25 @@
 import { arrayMethods } from './array'
-import Dep from "./dep";
+import Dep from './dep'
+
+function dependArray(value) {
+  for (let i = 0; i < value.length; i++) {
+    const item = value[i]
+    item.__ob__ && item.__ob__.dep.depend()
+    if (Array.isArray(item)) dependArray(item)
+  }
+}
 
 function defineReactive(data, key, value) {
-  observe(value) // 对结果，递归拦截
+  const dataOb = observe(value) // 对结果，递归拦截
   const dep = new Dep()
   Object.defineProperty(data, key, {
     get() {
       if (Dep.target) {
         dep.depend()
+        if (dataOb) {
+          dataOb.dep.depend()
+          if (Array.isArray(value)) dependArray(value)
+        }
       }
       return value
     },
@@ -23,10 +35,11 @@ function defineReactive(data, key, value) {
 class Observer {
   constructor(value) {
     // value.__ob__ = this
+    this.dep = new Dep()
     Object.defineProperty(value, '__ob__', {
       value: this,
       enumerable: false,
-      configurable: false
+      configurable: false,
     })
 
     if (Array.isArray(value)) {

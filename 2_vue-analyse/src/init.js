@@ -1,6 +1,7 @@
 import { initState } from './state'
 import { compileToFunctions } from './compiler/index'
-import { mountComponent } from "./lifecycle";
+import { mountComponent } from './lifecycle'
+import { nextTick } from './utils'
 
 function initMixin(Vue) {
   // Vue的初始化
@@ -26,10 +27,11 @@ function initMixin(Vue) {
       }
       options.render = compileToFunctions(template)
     }
-
     // 组件挂载
     mountComponent(vm, el)
   }
+
+  Vue.prototype.$nextTick = nextTick
 }
 
 export { initMixin }
