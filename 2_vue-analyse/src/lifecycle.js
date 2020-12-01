@@ -12,7 +12,8 @@ function mountComponent(vm, el) {
 function lifecycleMixin(Vue) {
   Vue.prototype._update = function (vNode) {
     const vm = this
-    vm.$el = patch(vm.$options.el, vNode)
+    // vm.$el = patch(vm.$options.el, vNode)
+    vm.$options.el = patch(vm.$options.el, vNode)
 
   }
 }

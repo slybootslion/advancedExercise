@@ -1,16 +1,21 @@
 import { arrayMethods } from './array'
+import Dep from "./dep";
 
 function defineReactive(data, key, value) {
   observe(value) // 对结果，递归拦截
-
+  const dep = new Dep()
   Object.defineProperty(data, key, {
     get() {
+      if (Dep.target) {
+        dep.depend()
+      }
       return value
     },
     set(nValue) {
       if (nValue === value) return
       observe(nValue)
       value = nValue
+      dep.notify()
     },
   })
 }

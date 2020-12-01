@@ -76,17 +76,69 @@
     };
   });
 
+  var id = 0;
+
+  var Dep = /*#__PURE__*/function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+
+      this.id = id++; // 属性去记住watcher
+
+      this.subs = [];
+    } // watcher记住属性
+
+
+    _createClass(Dep, [{
+      key: "depend",
+      value: function depend() {
+        Dep.target.addDep(this);
+      } // 记录watcher
+
+    }, {
+      key: "addSub",
+      value: function addSub(watcher) {
+        this.subs.push(watcher);
+      } // 通知watcher渲染
+
+    }, {
+      key: "notify",
+      value: function notify() {
+        this.subs.forEach(function (watcher) {
+          return watcher.update();
+        });
+      }
+    }]);
+
+    return Dep;
+  }();
+
+  Dep.target = null;
+
+  function pushTarget(watcher) {
+    Dep.target = watcher;
+  }
+
+  function popTarget() {
+    Dep.target = null;
+  }
+
   function defineReactive(data, key, value) {
     observe(value); // 对结果，递归拦截
 
+    var dep = new Dep();
     Object.defineProperty(data, key, {
       get: function get() {
+        if (Dep.target) {
+          dep.depend();
+        }
+
         return value;
       },
       set: function set(nValue) {
         if (nValue === value) return;
         observe(nValue);
         value = nValue;
+        dep.notify();
       }
     });
   }
@@ -377,18 +429,50 @@
     return new Function(render);
   }
 
-  var id = 0;
+  var id$1 = 0;
 
-  var Watcher = function Watcher(vm, fn, cb, options) {
-    _classCallCheck(this, Watcher);
+  var Watcher = /*#__PURE__*/function () {
+    function Watcher(vm, fn, cb, options) {
+      _classCallCheck(this, Watcher);
 
-    this.vm = vm;
-    this.fn = fn;
-    this.cb = cb;
-    this.options = options;
-    this.id = id++;
-    this.fn();
-  };
+      this.vm = vm;
+      this.getter = fn;
+      this.cb = cb;
+      this.options = options;
+      this.id = id$1++;
+      this.dep = [];
+      this.depsId = new Set(); // 调用render方法，对模板中的数进行取值
+
+      this.get();
+    }
+
+    _createClass(Watcher, [{
+      key: "get",
+      value: function get() {
+        pushTarget(this); // 对属性进行取值操作
+
+        this.getter();
+        popTarget();
+      }
+    }, {
+      key: "addDep",
+      value: function addDep(dep) {
+        // 记录watcher
+        if (!this.depsId.has(dep.id)) {
+          this.dep.push(dep);
+          this.depsId.add(dep.id);
+          dep.addSub(this);
+        }
+      }
+    }, {
+      key: "update",
+      value: function update() {
+        this.get();
+      }
+    }]);
+
+    return Watcher;
+  }();
 
   function patch(oldVNode, vNode) {
     var isRealElement = oldVNode.nodeType;
@@ -458,8 +542,9 @@
 
   function lifecycleMixin(Vue) {
     Vue.prototype._update = function (vNode) {
-      var vm = this;
-      vm.$el = patch(vm.$options.el, vNode);
+      var vm = this; // vm.$el = patch(vm.$options.el, vNode)
+
+      vm.$options.el = patch(vm.$options.el, vNode);
     };
   }
 

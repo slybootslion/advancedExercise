@@ -5,6 +5,7 @@
   <title>Vue实现</title>
 </head>
 <body>
+
 <div id="app" at="p">
   <p a="1" b="2" c="3">name:{{name}}</p>
   {{obj.a}} hello vue {{obj.b}} hahaha
@@ -12,6 +13,7 @@
   <p style="color: red;background:yellow">{{arr}}</p>
   <p><span>hello vue</span></p>
 </div>
+
 <script src="/dist/umd/vue.js" charset="utf-8"></script>
 <script type="text/javascript" charset="utf-8">
 const vm = new Vue({
@@ -28,6 +30,13 @@ const vm = new Vue({
     }
   }
 })
+
+setTimeout(() => {
+  vm.name = 'gg'
+  vm.num = 100
+  vm.obj.a = 10
+  // vm._update(vm._render())
+}, 1000)
 </script>
 </body>
 </html>
