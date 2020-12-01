@@ -1,4 +1,5 @@
 import { Watcher } from './observer/watcher'
+import { patch } from "./vdom/patch";
 
 function mountComponent(vm, el) {
   const updateComponent = () => {
@@ -10,7 +11,9 @@ function mountComponent(vm, el) {
 
 function lifecycleMixin(Vue) {
   Vue.prototype._update = function (vNode) {
-    console.log('update')
+    const vm = this
+    vm.$el = patch(vm.$options.el, vNode)
+
   }
 }
 

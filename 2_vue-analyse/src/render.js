@@ -1,15 +1,16 @@
-function renderMixin (Vue) {
-  // 任务8：8.产生虚拟dom 14分
-  Vue.prototype._c = function () {
+import { createElement, createTextVNode } from './vdom/index'
 
+function renderMixin(Vue) {
+  Vue.prototype._c = function (...args) {
+    return createElement(this, ...args)
   }
 
-  Vue.prototype._v = function () {
-
+  Vue.prototype._v = function (text) {
+    return createTextVNode(this, text)
   }
 
-  Vue.prototype._s = function () {
-
+  Vue.prototype._s = function (val) {
+    return val == null ? '' : typeof val === 'object' ? JSON.stringify(val) : val
   }
 
   Vue.prototype._render = function () {

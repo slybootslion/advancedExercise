@@ -20,8 +20,8 @@ function genAttr(attrs) {
 // 区分元素还是文本
 function gen(child) {
   if (child.type === 1) {
-    // 元素
-    return genChildren(child.children)
+    // 元素 递归调用
+    return generate(child)
   } else {
     // 文本
     const t = child.text
