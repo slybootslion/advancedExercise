@@ -42,6 +42,55 @@
     return Constructor;
   }
 
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+      if (enumerableOnly) symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+
+      if (i % 2) {
+        ownKeys(Object(source), true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys(Object(source)).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+      }
+    }
+
+    return target;
+  }
+
   var oldArrayProtoMethods = Array.prototype;
   var arrayMethods = Object.create(oldArrayProtoMethods);
   var methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
@@ -123,6 +172,92 @@
     Dep.target = null;
   }
 
+  var fns = [];
+  var waiting = false;
+
+  function flushCallback() {
+    for (var i = 0; i < fns.length; i++) {
+      var fn = fns[i];
+      fn();
+    }
+
+    fns = [];
+    waiting = false;
+  }
+
+  function nextTick(fn) {
+    fns.push(fn);
+
+    if (!waiting) {
+      // Vue3只使用了Promise其他兼容降级处理的过时玩意儿就不写了
+      Promise.resolve().then(flushCallback);
+      waiting = true;
+    }
+  }
+
+  var LIFECYCLE_HOOK = ['beforeCreate', 'created', 'beforeMount', 'mount'];
+  var strats = {};
+
+  function mergeHook(parentValue, childValue) {
+    if (childValue) {
+      if (parentValue) {
+        return parentValue.concat(childValue);
+      } else {
+        return [childValue];
+      }
+    } else {
+      return parentValue;
+    }
+  }
+
+  LIFECYCLE_HOOK.forEach(function (hookStr) {
+    return strats[hookStr] = mergeHook;
+  });
+
+  function mergeOptions(parent, child) {
+    var options = {}; // 自定义策略
+    // 1. 父级、子级都有值，用子级替换父级
+    // 2. 父级有值，用父级的
+
+    function mergeField(key) {
+      // 策略模式
+      if (strats[key]) {
+        return options[key] = strats[key](parent[key], child[key]);
+      } // 非特有策略，正常合并
+
+
+      if (isObject(parent[key]) && isObject(child[key])) {
+        options[key] = _objectSpread2(_objectSpread2({}, parent[key]), child[key]);
+      } else {
+        if (child[key]) {
+          options[key] = child[key];
+        } else {
+          options[key] = parent[key];
+        }
+      }
+    }
+
+    for (var parentKey in parent) {
+      if (parent.hasOwnProperty(parentKey)) {
+        mergeField(parentKey);
+      }
+    }
+
+    for (var childKey in child) {
+      if (child.hasOwnProperty(childKey)) {
+        if (!parent.hasOwnProperty(childKey)) {
+          mergeField(childKey);
+        }
+      }
+    }
+
+    return options;
+  }
+
+  function isObject(obj) {
+    return _typeof(obj) === 'object' && obj != null;
+  }
+
   function dependArray(value) {
     for (var i = 0; i < value.length; i++) {
       var item = value[i];
@@ -199,7 +334,7 @@
   }();
 
   function observe(data) {
-    if (_typeof(data) !== 'object' || data == null) return;
+    if (!isObject(data)) return;
     if (data.__ob__) return;
     return new Observer(data);
   }
@@ -444,29 +579,6 @@
     return new Function(render);
   }
 
-  var fns = [];
-  var waiting = false;
-
-  function flushCallback() {
-    for (var i = 0; i < fns.length; i++) {
-      var fn = fns[i];
-      fn();
-    }
-
-    fns = [];
-    waiting = false;
-  }
-
-  function nextTick(fn) {
-    fns.push(fn);
-
-    if (!waiting) {
-      // Vue3只使用了Promise其他兼容降级处理的过时玩意儿就不写了
-      Promise.resolve().then(flushCallback);
-      waiting = true;
-    }
-  }
-
   var has = {};
   var queue = [];
   var waiting$1 = false;
@@ -617,16 +729,28 @@
     Vue.prototype._update = function (vNode) {
       var vm = this; // vm.$el = patch(vm.$options.el, vNode)
 
-      vm.$options.el = patch(vm.$options.el, vNode);
+      vm.$el = patch(vm.$el, vNode);
     };
+  }
+
+  function callHook(vm, hook) {
+    var handle = vm.$options[hook];
+    if (handle) handle.forEach(function (fn) {
+      return fn.call(vm);
+    });
   }
 
   function initMixin(Vue) {
     // Vue的初始化
     Vue.prototype._init = function (options) {
-      var vm = this;
-      vm.$options = options;
+      var vm = this; // vm.$options = options
+      // 合并选项（如：mixin生命周期等）
+
+      vm.$options = mergeOptions(vm.constructor.options, options);
+      callHook(vm, 'beforeCreate'); // 状态初始化
+
       initState(vm);
+      callHook(vm, 'created');
 
       if (vm.$options.el) {
         vm.$mount(vm.$options.el);
@@ -636,8 +760,8 @@
     Vue.prototype.$mount = function (el) {
       el = document.querySelector(el);
       var vm = this;
-      var options = this.$options;
-      options.el = el;
+      var options = vm.$options;
+      vm.$el = el;
 
       if (!options.render) {
         var template = options.template;
@@ -706,6 +830,18 @@
     };
   }
 
+  // 混合全局API
+
+  function initGlobalAPI(Vue) {
+    Vue.options = {};
+
+    Vue.mixin = function (mixin) {
+      // this是大Vue mergeOptions本质是个对象合并的方法
+      this.options = mergeOptions(this.options, mixin);
+      return this;
+    };
+  }
+
   function Vue(options) {
     this._init(options);
   }
@@ -713,6 +849,7 @@
   initMixin(Vue);
   lifecycleMixin(Vue);
   renderMixin(Vue);
+  initGlobalAPI(Vue);
 
   return Vue;
 

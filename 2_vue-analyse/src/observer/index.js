@@ -1,5 +1,6 @@
 import { arrayMethods } from './array'
 import Dep from './dep'
+import { isObject } from '../utils'
 
 function dependArray(value) {
   for (let i = 0; i < value.length; i++) {
@@ -66,7 +67,7 @@ class Observer {
 }
 
 function observe(data) {
-  if (typeof data !== 'object' || data == null) return
+  if (!isObject(data)) return
   if (data.__ob__) return
   return new Observer(data)
 }

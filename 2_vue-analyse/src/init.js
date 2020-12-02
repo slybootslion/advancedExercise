@@ -1,15 +1,19 @@
 import { initState } from './state'
 import { compileToFunctions } from './compiler/index'
-import { mountComponent } from './lifecycle'
-import { nextTick } from './utils'
+import { callHook, mountComponent } from './lifecycle'
+import { mergeOptions, nextTick } from './utils'
 
 function initMixin(Vue) {
   // Vue的初始化
   Vue.prototype._init = function (options) {
     const vm = this
-    vm.$options = options
+    // vm.$options = options
+    // 合并选项（如：mixin生命周期等）
+    vm.$options = mergeOptions(vm.constructor.options, options)
+    callHook(vm, 'beforeCreate')
+    // 状态初始化
     initState(vm)
-
+    callHook(vm, 'created')
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
@@ -18,8 +22,8 @@ function initMixin(Vue) {
   Vue.prototype.$mount = function (el) {
     el = document.querySelector(el)
     const vm = this
-    const options = this.$options
-    options.el = el
+    const options = vm.$options
+    vm.$el = el
     if (!options.render) {
       let template = options.template
       if (!template && el) {

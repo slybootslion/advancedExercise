@@ -17,6 +17,24 @@
 
 <script src="/dist/umd/vue.js" charset="utf-8"></script>
 <script type="text/javascript" charset="utf-8">
+Vue.mixin({
+  a: 1,
+  beforeCreate () {
+    console.log('mixin beforecreate-1')
+  },
+  created () {
+    console.log('mixin created-1')
+  }
+})
+Vue.mixin({
+  b: 2,
+  beforeCreate () {
+    console.log('mixin beforecreate-2')
+  },
+  created () {
+    console.log('mixin created-2')
+  }
+})
 const vm = new Vue({
   el: '#app',
   data () {
@@ -29,15 +47,21 @@ const vm = new Vue({
         b: 'str'
       }
     }
+  },
+  beforeCreate () {
+    console.log('beforeCreate')
+  },
+  created () {
+    console.log('created')
   }
 })
 
 setTimeout(() => {
-  // vm.name = 'gg'
-  // vm.num = 100
+  vm.name = 'gg'
+  vm.num = 100
   // vm.obj.a = 10
-  vm.arr[1].push(666)
-  // vm.$nextTick(() => console.log(vm.$options.el.innerHTML))
+  // vm.arr[1].push(666)
+  // vm.$nextTick(() => console.log(vm.$el.innerHTML))
   // vm._update(vm._render())
 }, 1000)
 </script>

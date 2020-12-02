@@ -1,5 +1,5 @@
 import { Watcher } from './observer/watcher'
-import { patch } from "./vdom/patch";
+import { patch } from './vdom/patch'
 
 function mountComponent(vm, el) {
   const updateComponent = () => {
@@ -13,9 +13,13 @@ function lifecycleMixin(Vue) {
   Vue.prototype._update = function (vNode) {
     const vm = this
     // vm.$el = patch(vm.$options.el, vNode)
-    vm.$options.el = patch(vm.$options.el, vNode)
-
+    vm.$el = patch(vm.$el, vNode)
   }
 }
 
-export { mountComponent, lifecycleMixin }
+function callHook(vm, hook) {
+  const handle = vm.$options[hook]
+  if (handle) handle.forEach(fn => fn.call(vm))
+}
+
+export { mountComponent, lifecycleMixin, callHook }
