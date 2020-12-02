@@ -8,7 +8,7 @@ function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     const vm = this
     // vm.$options = options
-    // 合并选项（如：mixin生命周期等）
+    // 合并选项（如：mixin生命周期，components等）
     vm.$options = mergeOptions(vm.constructor.options, options)
     callHook(vm, 'beforeCreate')
     // 状态初始化
@@ -20,7 +20,7 @@ function initMixin(Vue) {
   }
 
   Vue.prototype.$mount = function (el) {
-    el = document.querySelector(el)
+    el = el && document.querySelector(el)
     const vm = this
     const options = vm.$options
     vm.$el = el
@@ -32,7 +32,7 @@ function initMixin(Vue) {
       options.render = compileToFunctions(template)
     }
     // 组件挂载
-    mountComponent(vm, el)
+    mountComponent(vm)
   }
 
   Vue.prototype.$nextTick = nextTick

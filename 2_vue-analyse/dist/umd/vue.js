@@ -214,10 +214,18 @@
     return strats[hookStr] = mergeHook;
   });
 
+  strats.components = function (parentValue, childValue) {
+    var res = Object.create(parentValue);
+
+    for (var key in childValue) {
+      if (childValue.hasOwnProperty(key)) res[key] = childValue[key];
+    }
+
+    return res;
+  };
+
   function mergeOptions(parent, child) {
-    var options = {}; // 自定义策略
-    // 1. 父级、子级都有值，用子级替换父级
-    // 2. 父级有值，用父级的
+    var options = {};
 
     function mergeField(key) {
       // 策略模式
@@ -256,6 +264,18 @@
 
   function isObject(obj) {
     return _typeof(obj) === 'object' && obj != null;
+  }
+
+  function makeUp(str) {
+    var map = {};
+    str.split(',').forEach(function (tag) {
+      return map[tag] = true;
+    });
+    return map;
+  }
+
+  function isReservedTag(tagName) {
+    return !!makeUp('a,p,div,ul,li,span,input,h1,h2,h3,h4,h5,h6,button')[tagName];
   }
 
   function dependArray(value) {
@@ -660,6 +680,7 @@
   }();
 
   function patch(oldVNode, vNode) {
+    if (!oldVNode) return createEl(vNode);
     var isRealElement = oldVNode.nodeType;
 
     if (isRealElement) {
@@ -670,6 +691,18 @@
       parentEl.removeChild(oldVNode);
       return el;
     }
+  } // 判断是组件还是原始标签
+
+
+  function createComponent(vNode) {
+    var i = vNode.data;
+    if ((i = i.hook) && (i = i.init)) i(vNode);
+
+    if (vNode.componentInstance) {
+      return true;
+    }
+
+    return false;
   } // 创建正式节点
 
 
@@ -683,6 +716,7 @@
 
     if (typeof tag === 'string') {
       // 真实节点 或 组件
+      if (createComponent(vNode)) return vNode.componentInstance.$el;
       vNode.el = document.createElement(tag);
       updateProperties(vNode);
       children.forEach(function (child) {
@@ -716,7 +750,7 @@
     }
   }
 
-  function mountComponent(vm, el) {
+  function mountComponent(vm) {
     var updateComponent = function updateComponent() {
       vm._update(vm._render());
     }; // 默认通过watcher渲染
@@ -744,7 +778,7 @@
     // Vue的初始化
     Vue.prototype._init = function (options) {
       var vm = this; // vm.$options = options
-      // 合并选项（如：mixin生命周期等）
+      // 合并选项（如：mixin生命周期，components等）
 
       vm.$options = mergeOptions(vm.constructor.options, options);
       callHook(vm, 'beforeCreate'); // 状态初始化
@@ -758,7 +792,7 @@
     };
 
     Vue.prototype.$mount = function (el) {
-      el = document.querySelector(el);
+      el = el && document.querySelector(el);
       var vm = this;
       var options = vm.$options;
       vm.$el = el;
@@ -787,21 +821,45 @@
       children[_key - 3] = arguments[_key];
     }
 
-    return vNode(vm, tag, data, data.key, children, undefined);
+    if (isReservedTag(tag)) {
+      return vNode(vm, tag, data, data.key, children, undefined);
+    } // 组件 Ctor即Sub
+
+
+    var Ctor = vm.$options.components[tag];
+    return createComponent$1(vm, tag, data, data.key, children, Ctor);
   }
 
   function createTextVNode(vm, t) {
     return vNode(vm, undefined, undefined, undefined, undefined, t);
   }
 
-  function vNode(vm, tag, data, key, children, txt) {
+  function createComponent$1(vm, tag, data, key, children, Ctor) {
+    if (isObject(Ctor)) {
+      Ctor = vm.$options._base.extend(Ctor);
+    } // 组件添加生命周期
+
+
+    data.hook = {
+      init: function init(vNode) {
+        var child = vNode.componentInstance = new vNode.componentOpts.Ctor({});
+        child.$mount();
+      }
+    };
+    return vNode(vm, "vue-component-".concat(tag + Ctor.cid), data, key, undefined, undefined, {
+      Ctor: Ctor
+    });
+  }
+
+  function vNode(vm, tag, data, key, children, txt, componentOpts) {
     return {
       vm: vm,
       tag: tag,
       data: data,
       key: key,
       children: children,
-      txt: txt
+      txt: txt,
+      componentOpts: componentOpts
     };
   }
 
@@ -833,12 +891,41 @@
   // 混合全局API
 
   function initGlobalAPI(Vue) {
+    // 存放全局配置
     Vue.options = {};
+    Vue.options._base = Vue;
 
     Vue.mixin = function (mixin) {
       // this是大Vue mergeOptions本质是个对象合并的方法
       this.options = mergeOptions(this.options, mixin);
       return this;
+    }; // 存放定义的组件
+
+
+    Vue.options.components = {};
+
+    Vue.component = function (id, opts) {
+      opts.name = opts.name || id;
+      opts = Vue.options._base.extend(opts);
+      this.options.components[id] = opts;
+    };
+
+    var cid = 0;
+
+    Vue.extend = function (opts) {
+      var Super = this;
+
+      var Sub = function Sub(opts) {
+        this._init(opts);
+      }; // 子类继承父类
+
+
+      Sub.cid = cid++;
+      Sub.prototype = Object.create(Super.prototype);
+      Sub.prototype.constructor = Sub;
+      Sub.component = Super.component;
+      Sub.options = mergeOptions(Super.options, opts);
+      return Sub;
     };
   }
 

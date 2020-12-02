@@ -1,7 +1,7 @@
 import { Watcher } from './observer/watcher'
 import { patch } from './vdom/patch'
 
-function mountComponent(vm, el) {
+function mountComponent(vm) {
   const updateComponent = () => {
     vm._update(vm._render())
   }

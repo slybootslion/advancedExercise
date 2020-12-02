@@ -1,4 +1,5 @@
 function patch(oldVNode, vNode) {
+  if (!oldVNode) return createEl(vNode)
   const isRealElement = oldVNode.nodeType
   if (isRealElement) {
     // 初次渲染
@@ -11,11 +12,23 @@ function patch(oldVNode, vNode) {
   }
 }
 
+// 判断是组件还是原始标签
+function createComponent(vNode) {
+  let i = vNode.data
+  if ((i = i.hook) && (i = i.init)) i(vNode)
+  if (vNode.componentInstance) {
+    return true
+  }
+  return false
+}
+
 // 创建正式节点
 function createEl(vNode) {
   const { vm, tag, children, key, data, txt } = vNode
   if (typeof tag === 'string') {
     // 真实节点 或 组件
+    if (createComponent(vNode)) return vNode.componentInstance.$el
+
     vNode.el = document.createElement(tag)
     updateProperties(vNode)
     children.forEach(child => {

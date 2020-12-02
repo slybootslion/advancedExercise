@@ -36,11 +36,16 @@ function mergeHook(parentValue, childValue) {
 
 LIFECYCLE_HOOK.forEach(hookStr => (strats[hookStr] = mergeHook))
 
+strats.components = function (parentValue, childValue) {
+  const res = Object.create(parentValue)
+  for (const key in childValue) {
+    if (childValue.hasOwnProperty(key)) res[key] = childValue[key]
+  }
+  return res
+}
+
 function mergeOptions(parent, child) {
   const options = {}
-  // 自定义策略
-  // 1. 父级、子级都有值，用子级替换父级
-  // 2. 父级有值，用父级的
 
   function mergeField(key) {
     // 策略模式
@@ -79,4 +84,14 @@ function isObject(obj) {
   return typeof obj === 'object' && obj != null
 }
 
-export { nextTick, mergeOptions, isObject }
+function makeUp(str) {
+  const map = {}
+  str.split(',').forEach(tag => (map[tag] = true))
+  return map
+}
+
+function isReservedTag(tagName) {
+  return !!makeUp('a,p,div,ul,li,span,input,h1,h2,h3,h4,h5,h6,button')[tagName]
+}
+
+export { nextTick, mergeOptions, isObject, isReservedTag }
