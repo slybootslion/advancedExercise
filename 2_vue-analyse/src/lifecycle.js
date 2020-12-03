@@ -13,7 +13,14 @@ function lifecycleMixin(Vue) {
   Vue.prototype._update = function (vNode) {
     const vm = this
     // vm.$el = patch(vm.$options.el, vNode)
-    vm.$el = patch(vm.$el, vNode)
+    // vm.$el = patch(vm.$el, vNode)
+    const prevVNode = vm._vNode // 保存上一次虚拟节点，下次更新时使用
+    vm._vNode = vNode
+    if (!prevVNode) {
+      vm.$el = patch(vm.$el, vNode)
+    } else {
+      vm.$el = patch(prevVNode, vNode)
+    }
   }
 }
 

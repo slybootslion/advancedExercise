@@ -96,6 +96,12 @@ function updateProperties(vNode, oldProps = {}) {
   }
 }
 
+function makeIndexByKey(oldChildren) {
+  let map = {}
+  oldChildren.forEach((child, idx) => (map[child.key] = idx))
+  return map
+}
+
 // 更新子节点
 function updateChildren(el, childrenOld, childrenNew) {
   let oldStartIndex = 0
@@ -108,8 +114,14 @@ function updateChildren(el, childrenOld, childrenNew) {
   let newStartVNode = childrenNew[0]
   let newEndVNode = childrenNew[newEndIndex]
 
+  const map = makeIndexByKey(childrenOld)
+
   while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
-    if (isSameVNode(oldStartVNode, newStartVNode)) {
+    if (oldStartVNode == null) {
+      oldStartVNode = childrenOld[++oldStartIndex]
+    } else if (oldEndVNode == null) {
+      oldEndVNode = childrenOld[--oldEndIndex]
+    } else if (isSameVNode(oldStartVNode, newStartVNode)) {
       patch(oldStartVNode, newStartVNode)
       oldStartVNode = childrenOld[++oldStartIndex]
       newStartVNode = childrenNew[++newStartIndex]
@@ -128,6 +140,17 @@ function updateChildren(el, childrenOld, childrenNew) {
       oldEndVNode = childrenOld[--oldEndIndex]
       newStartVNode = childrenNew[++newStartIndex]
     } else {
+      const moveIndex = map[newStartVNode.key]
+      if (moveIndex == null) {
+        el.insertBefore(createEl(newStartVNode), oldStartVNode.el)
+      } else {
+        const moveVNode = childrenOld[moveIndex]
+        childrenOld[moveIndex] = null
+        if (!moveVNode.el) return
+        el.insertBefore(moveVNode.el, oldStartVNode.el)
+        patch(moveVNode, newStartVNode)
+      }
+      newStartVNode = childrenNew[++newStartIndex]
     }
   }
 
@@ -137,6 +160,13 @@ function updateChildren(el, childrenOld, childrenNew) {
       // el.appendChild(createEl(childrenNew[i]))
       // 如果insertBefore==null相当于appendChild
       el.insertBefore(createEl(childrenNew[i]), nextEl)
+    }
+  }
+
+  if (oldStartIndex <= oldEndIndex) {
+    for (let i = oldStartIndex; i <= oldEndIndex; i++) {
+      const child = childrenOld[i]
+      if (child != null) el.removeChild(child.el)
     }
   }
 }

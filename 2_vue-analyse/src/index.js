@@ -14,39 +14,40 @@ lifecycleMixin(Vue)
 renderMixin(Vue)
 initGlobalAPI(Vue)
 
-/*eg.*/
-const vm = new Vue({
-  data: {
-    template: 'diff-temp',
-  },
-})
+/* diff eg.*/
+// const vm = new Vue({
+//   data: {
+//     template: 'diff-temp',
+//   },
+// })
+//
+// const renderFn = compileToFunctions(`<div id="a" a="1" style="color:blue">
+//   <p key="A">A</p>
+//   <p key="B">B</p>
+//   <p key="C">C</p>
+//   <p key="D">D</p>
+//   <p key="F">F</p>
+// </div>`)
+// const vNode = renderFn.call(vm)
+// const el = createEl(vNode)
+// document.body.appendChild(el)
+//
+// const vmC = new Vue({
+//   data: {
+//     template: 'diff-temp-change',
+//   },
+// })
+//
+// const renderFnC = compileToFunctions(`<div id="a" a="1" style="color:#fff;background:red">
+//   <p key="N">N</p>
+//   <p key="A">A</p>
+//   <p key="C">C</p>
+//   <p key="B">B</p>
+//   <p key="E">E</p>
+// </div>`)
+// const vNodeC = renderFnC.call(vmC)
+// setTimeout(() => {
+//   patch(vNode, vNodeC)
+// }, 1000)
 
-const renderFn = compileToFunctions(`<div id="a" a="1" style="color:blue">
-  <p key="A">A</p>
-  <p key="B">B</p>
-  <p key="C">C</p>
-  <p key="D">D</p>
-</div>`)
-const vNode = renderFn.call(vm)
-console.log(vNode)
-const el = createEl(vNode)
-document.body.appendChild(el)
-
-const vmC = new Vue({
-  data: {
-    template: 'diff-temp-change',
-  },
-})
-
-const renderFnC = compileToFunctions(`<div id="a" a="1" style="color:#fff;background:red">
-  <p key="A">A</p>
-  <p key="B">B</p>
-  <p key="C">C</p>
-  <p key="D">D</p>
-  <p key="E">E</p>
-</div>`)
-const vNodeC = renderFnC.call(vmC)
-setTimeout(() => {
-  patch(vNode, vNodeC)
-}, 1000)
 export default Vue

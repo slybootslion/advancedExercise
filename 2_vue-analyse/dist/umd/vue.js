@@ -840,6 +840,14 @@
         }
       }
     }
+  }
+
+  function makeIndexByKey(oldChildren) {
+    var map = {};
+    oldChildren.forEach(function (child, idx) {
+      return map[child.key] = idx;
+    });
+    return map;
   } // 更新子节点
 
 
@@ -852,9 +860,14 @@
     var newEndIndex = childrenNew.length - 1;
     var newStartVNode = childrenNew[0];
     var newEndVNode = childrenNew[newEndIndex];
+    var map = makeIndexByKey(childrenOld);
 
     while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
-      if (isSameVNode(oldStartVNode, newStartVNode)) {
+      if (oldStartVNode == null) {
+        oldStartVNode = childrenOld[++oldStartIndex];
+      } else if (oldEndVNode == null) {
+        oldEndVNode = childrenOld[--oldEndIndex];
+      } else if (isSameVNode(oldStartVNode, newStartVNode)) {
         patch(oldStartVNode, newStartVNode);
         oldStartVNode = childrenOld[++oldStartIndex];
         newStartVNode = childrenNew[++newStartIndex];
@@ -872,7 +885,21 @@
         el.insertBefore(oldEndVNode.el, oldStartVNode.el);
         oldEndVNode = childrenOld[--oldEndIndex];
         newStartVNode = childrenNew[++newStartIndex];
-      } else ;
+      } else {
+        var moveIndex = map[newStartVNode.key];
+
+        if (moveIndex == null) {
+          el.insertBefore(createEl(newStartVNode), oldStartVNode.el);
+        } else {
+          var moveVNode = childrenOld[moveIndex];
+          childrenOld[moveIndex] = null;
+          if (!moveVNode.el) return;
+          el.insertBefore(moveVNode.el, oldStartVNode.el);
+          patch(moveVNode, newStartVNode);
+        }
+
+        newStartVNode = childrenNew[++newStartIndex];
+      }
     }
 
     if (newStartIndex <= newEndIndex) {
@@ -881,6 +908,13 @@
         // 如果insertBefore==null相当于appendChild
 
         el.insertBefore(createEl(childrenNew[i]), nextEl);
+      }
+    }
+
+    if (oldStartIndex <= oldEndIndex) {
+      for (var _i = oldStartIndex; _i <= oldEndIndex; _i++) {
+        var child = childrenOld[_i];
+        if (child != null) el.removeChild(child.el);
       }
     }
   }
@@ -897,8 +931,17 @@
   function lifecycleMixin(Vue) {
     Vue.prototype._update = function (vNode) {
       var vm = this; // vm.$el = patch(vm.$options.el, vNode)
+      // vm.$el = patch(vm.$el, vNode)
 
-      vm.$el = patch(vm.$el, vNode);
+      var prevVNode = vm._vNode; // 保存上一次虚拟节点，下次更新时使用
+
+      vm._vNode = vNode;
+
+      if (!prevVNode) {
+        vm.$el = patch(vm.$el, vNode);
+      } else {
+        vm.$el = patch(prevVNode, vNode);
+      }
     };
   }
 
@@ -1023,28 +1066,6 @@
   lifecycleMixin(Vue);
   renderMixin(Vue);
   initGlobalAPI(Vue);
-  /*eg.*/
-
-  var vm = new Vue({
-    data: {
-      template: 'diff-temp'
-    }
-  });
-  var renderFn = compileToFunctions("<div id=\"a\" a=\"1\" style=\"color:blue\">\n  <p key=\"A\">A</p>\n  <p key=\"B\">B</p>\n  <p key=\"C\">C</p>\n  <p key=\"D\">D</p>\n</div>");
-  var vNode$1 = renderFn.call(vm);
-  console.log(vNode$1);
-  var el = createEl(vNode$1);
-  document.body.appendChild(el);
-  var vmC = new Vue({
-    data: {
-      template: 'diff-temp-change'
-    }
-  });
-  var renderFnC = compileToFunctions("<div id=\"a\" a=\"1\" style=\"color:#fff;background:red\">\n  <p key=\"A\">A</p>\n  <p key=\"B\">B</p>\n  <p key=\"C\">C</p>\n  <p key=\"D\">D</p>\n  <p key=\"E\">E</p>\n</div>");
-  var vNodeC = renderFnC.call(vmC);
-  setTimeout(function () {
-    patch(vNode$1, vNodeC);
-  }, 1000);
 
   return Vue;
 
