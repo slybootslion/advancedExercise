@@ -31,4 +31,9 @@ function vNode(vm, tag, data, key, children, txt, componentOpts) {
   return { vm, tag, data, key, children, txt, componentOpts }
 }
 
-export { createElement, createTextVNode }
+
+function isSameVNode(n1, n2) {
+  return n1.tag === n2.tag && n1.key === n2.key
+}
+
+export { createElement, createTextVNode, isSameVNode }

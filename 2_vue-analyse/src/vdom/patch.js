@@ -1,3 +1,5 @@
+import { isSameVNode } from './index'
+
 function patch(oldVNode, vNode) {
   if (!oldVNode) return createEl(vNode)
   const isRealElement = oldVNode.nodeType
@@ -9,6 +11,26 @@ function patch(oldVNode, vNode) {
     parentEl.removeChild(oldVNode)
     return el
   } else {
+    // diff 两个虚拟节点的比对
+    if (oldVNode.tag !== vNode.tag) {
+      return oldVNode.el.parentNode.replaceChild(createEl(vNode), oldVNode.el)
+    }
+    if (!oldVNode.tag && oldVNode.txt !== vNode.txt) {
+      return (oldVNode.el.textContent = vNode.txt)
+    }
+    const el = (vNode.el = oldVNode.el)
+    updateProperties(vNode, oldVNode.data)
+
+    // 子节点的比对
+    const childrenOld = oldVNode.children || []
+    const childrenNew = vNode.children || []
+    if (childrenOld.length && childrenNew.length) {
+      updateChildren(el, childrenOld, childrenNew)
+    } else if (childrenOld.length) {
+      el.innerHTML = ''
+    } else if (childrenNew.length) {
+      childrenNew.forEach(child => el.appendChild(createEl(child)))
+    }
   }
 }
 
@@ -16,10 +38,7 @@ function patch(oldVNode, vNode) {
 function createComponent(vNode) {
   let i = vNode.data
   if ((i = i.hook) && (i = i.init)) i(vNode)
-  if (vNode.componentInstance) {
-    return true
-  }
-  return false
+  return !!vNode.componentInstance
 }
 
 // 创建正式节点
@@ -42,10 +61,27 @@ function createEl(vNode) {
 }
 
 // 创建属性
-function updateProperties(vNode) {
+function updateProperties(vNode, oldProps = {}) {
   const props = vNode.data || {}
   const el = vNode.el
 
+  // 老的属性新的没有（删除）
+  for (const oldKey in oldProps) {
+    if (!props[oldKey]) {
+      el.removeAttribute(oldKey)
+    }
+  }
+
+  // 样式特殊处理
+  const styleNew = props.style || {}
+  const styleOld = oldProps.style || {}
+  for (const oldKey in styleOld) {
+    if (!styleNew[oldKey]) {
+      el.style[oldKey] = ''
+    }
+  }
+
+  // 新的属性老的没有
   for (const propsKey in props) {
     if (props.hasOwnProperty(propsKey)) {
       const value = props[propsKey]
@@ -60,4 +96,49 @@ function updateProperties(vNode) {
   }
 }
 
-export { patch }
+// 更新子节点
+function updateChildren(el, childrenOld, childrenNew) {
+  let oldStartIndex = 0
+  let oldEndIndex = childrenOld.length - 1
+  let oldStartVNode = childrenOld[0]
+  let oldEndVNode = childrenOld[oldEndIndex]
+
+  let newStartIndex = 0
+  let newEndIndex = childrenNew.length - 1
+  let newStartVNode = childrenNew[0]
+  let newEndVNode = childrenNew[newEndIndex]
+
+  while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
+    if (isSameVNode(oldStartVNode, newStartVNode)) {
+      patch(oldStartVNode, newStartVNode)
+      oldStartVNode = childrenOld[++oldStartIndex]
+      newStartVNode = childrenNew[++newStartIndex]
+    } else if (isSameVNode(oldEndVNode, newEndVNode)) {
+      patch(oldEndVNode, newEndVNode)
+      oldEndVNode = childrenOld[--oldEndIndex]
+      newEndVNode = childrenNew[--newEndIndex]
+    } else if (isSameVNode(oldStartVNode, newEndVNode)) {
+      patch(oldStartVNode, newEndVNode)
+      el.insertBefore(oldStartVNode.el, oldEndVNode.el.nextSibling)
+      oldStartVNode = childrenOld[++oldStartIndex]
+      newEndVNode = childrenNew[--newEndIndex]
+    } else if (isSameVNode(oldEndVNode, newStartVNode)) {
+      patch(oldEndVNode, newStartVNode)
+      el.insertBefore(oldEndVNode.el, oldStartVNode.el)
+      oldEndVNode = childrenOld[--oldEndIndex]
+      newStartVNode = childrenNew[++newStartIndex]
+    } else {
+    }
+  }
+
+  if (newStartIndex <= newEndIndex) {
+    for (let i = newStartIndex; i <= newEndIndex; i++) {
+      const nextEl = childrenNew[newEndIndex + 1] == null ? null : childrenNew[newEndIndex + 1].el
+      // el.appendChild(createEl(childrenNew[i]))
+      // 如果insertBefore==null相当于appendChild
+      el.insertBefore(createEl(childrenNew[i]), nextEl)
+    }
+  }
+}
+
+export { patch, createEl }

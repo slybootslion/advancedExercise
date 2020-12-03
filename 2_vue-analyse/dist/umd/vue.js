@@ -679,6 +679,59 @@
     return Watcher;
   }();
 
+  function createElement(vm, tag) {
+    var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    for (var _len = arguments.length, children = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+      children[_key - 3] = arguments[_key];
+    }
+
+    if (isReservedTag(tag)) {
+      return vNode(vm, tag, data, data.key, children, undefined);
+    } // 组件 Ctor即Sub
+
+
+    var Ctor = vm.$options.components[tag];
+    return createComponent(vm, tag, data, data.key, children, Ctor);
+  }
+
+  function createTextVNode(vm, t) {
+    return vNode(vm, undefined, undefined, undefined, undefined, t);
+  }
+
+  function createComponent(vm, tag, data, key, children, Ctor) {
+    if (isObject(Ctor)) {
+      Ctor = vm.$options._base.extend(Ctor);
+    } // 组件添加生命周期
+
+
+    data.hook = {
+      init: function init(vNode) {
+        var child = vNode.componentInstance = new vNode.componentOpts.Ctor({});
+        child.$mount();
+      }
+    };
+    return vNode(vm, "vue-component-".concat(tag + Ctor.cid), data, key, undefined, undefined, {
+      Ctor: Ctor
+    });
+  }
+
+  function vNode(vm, tag, data, key, children, txt, componentOpts) {
+    return {
+      vm: vm,
+      tag: tag,
+      data: data,
+      key: key,
+      children: children,
+      txt: txt,
+      componentOpts: componentOpts
+    };
+  }
+
+  function isSameVNode(n1, n2) {
+    return n1.tag === n2.tag && n1.key === n2.key;
+  }
+
   function patch(oldVNode, vNode) {
     if (!oldVNode) return createEl(vNode);
     var isRealElement = oldVNode.nodeType;
@@ -690,19 +743,40 @@
       parentEl.insertBefore(el, oldVNode.nextSibling);
       parentEl.removeChild(oldVNode);
       return el;
+    } else {
+      // diff 两个虚拟节点的比对
+      if (oldVNode.tag !== vNode.tag) {
+        return oldVNode.el.parentNode.replaceChild(createEl(vNode), oldVNode.el);
+      }
+
+      if (!oldVNode.tag && oldVNode.txt !== vNode.txt) {
+        return oldVNode.el.textContent = vNode.txt;
+      }
+
+      var _el = vNode.el = oldVNode.el;
+
+      updateProperties(vNode, oldVNode.data); // 子节点的比对
+
+      var childrenOld = oldVNode.children || [];
+      var childrenNew = vNode.children || [];
+
+      if (childrenOld.length && childrenNew.length) {
+        updateChildren(_el, childrenOld, childrenNew);
+      } else if (childrenOld.length) {
+        _el.innerHTML = '';
+      } else if (childrenNew.length) {
+        childrenNew.forEach(function (child) {
+          return _el.appendChild(createEl(child));
+        });
+      }
     }
   } // 判断是组件还是原始标签
 
 
-  function createComponent(vNode) {
+  function createComponent$1(vNode) {
     var i = vNode.data;
     if ((i = i.hook) && (i = i.init)) i(vNode);
-
-    if (vNode.componentInstance) {
-      return true;
-    }
-
-    return false;
+    return !!vNode.componentInstance;
   } // 创建正式节点
 
 
@@ -716,7 +790,7 @@
 
     if (typeof tag === 'string') {
       // 真实节点 或 组件
-      if (createComponent(vNode)) return vNode.componentInstance.$el;
+      if (createComponent$1(vNode)) return vNode.componentInstance.$el;
       vNode.el = document.createElement(tag);
       updateProperties(vNode);
       children.forEach(function (child) {
@@ -732,8 +806,26 @@
 
 
   function updateProperties(vNode) {
+    var oldProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var props = vNode.data || {};
-    var el = vNode.el;
+    var el = vNode.el; // 老的属性新的没有（删除）
+
+    for (var oldKey in oldProps) {
+      if (!props[oldKey]) {
+        el.removeAttribute(oldKey);
+      }
+    } // 样式特殊处理
+
+
+    var styleNew = props.style || {};
+    var styleOld = oldProps.style || {};
+
+    for (var _oldKey in styleOld) {
+      if (!styleNew[_oldKey]) {
+        el.style[_oldKey] = '';
+      }
+    } // 新的属性老的没有
+
 
     for (var propsKey in props) {
       if (props.hasOwnProperty(propsKey)) {
@@ -746,6 +838,49 @@
         } else {
           el.setAttribute(propsKey, value);
         }
+      }
+    }
+  } // 更新子节点
+
+
+  function updateChildren(el, childrenOld, childrenNew) {
+    var oldStartIndex = 0;
+    var oldEndIndex = childrenOld.length - 1;
+    var oldStartVNode = childrenOld[0];
+    var oldEndVNode = childrenOld[oldEndIndex];
+    var newStartIndex = 0;
+    var newEndIndex = childrenNew.length - 1;
+    var newStartVNode = childrenNew[0];
+    var newEndVNode = childrenNew[newEndIndex];
+
+    while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
+      if (isSameVNode(oldStartVNode, newStartVNode)) {
+        patch(oldStartVNode, newStartVNode);
+        oldStartVNode = childrenOld[++oldStartIndex];
+        newStartVNode = childrenNew[++newStartIndex];
+      } else if (isSameVNode(oldEndVNode, newEndVNode)) {
+        patch(oldEndVNode, newEndVNode);
+        oldEndVNode = childrenOld[--oldEndIndex];
+        newEndVNode = childrenNew[--newEndIndex];
+      } else if (isSameVNode(oldStartVNode, newEndVNode)) {
+        patch(oldStartVNode, newEndVNode);
+        el.insertBefore(oldStartVNode.el, oldEndVNode.el.nextSibling);
+        oldStartVNode = childrenOld[++oldStartIndex];
+        newEndVNode = childrenNew[--newEndIndex];
+      } else if (isSameVNode(oldEndVNode, newStartVNode)) {
+        patch(oldEndVNode, newStartVNode);
+        el.insertBefore(oldEndVNode.el, oldStartVNode.el);
+        oldEndVNode = childrenOld[--oldEndIndex];
+        newStartVNode = childrenNew[++newStartIndex];
+      } else ;
+    }
+
+    if (newStartIndex <= newEndIndex) {
+      for (var i = newStartIndex; i <= newEndIndex; i++) {
+        var nextEl = childrenNew[newEndIndex + 1] == null ? null : childrenNew[newEndIndex + 1].el; // el.appendChild(createEl(childrenNew[i]))
+        // 如果insertBefore==null相当于appendChild
+
+        el.insertBefore(createEl(childrenNew[i]), nextEl);
       }
     }
   }
@@ -812,55 +947,6 @@
     };
 
     Vue.prototype.$nextTick = nextTick;
-  }
-
-  function createElement(vm, tag) {
-    var data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-    for (var _len = arguments.length, children = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
-      children[_key - 3] = arguments[_key];
-    }
-
-    if (isReservedTag(tag)) {
-      return vNode(vm, tag, data, data.key, children, undefined);
-    } // 组件 Ctor即Sub
-
-
-    var Ctor = vm.$options.components[tag];
-    return createComponent$1(vm, tag, data, data.key, children, Ctor);
-  }
-
-  function createTextVNode(vm, t) {
-    return vNode(vm, undefined, undefined, undefined, undefined, t);
-  }
-
-  function createComponent$1(vm, tag, data, key, children, Ctor) {
-    if (isObject(Ctor)) {
-      Ctor = vm.$options._base.extend(Ctor);
-    } // 组件添加生命周期
-
-
-    data.hook = {
-      init: function init(vNode) {
-        var child = vNode.componentInstance = new vNode.componentOpts.Ctor({});
-        child.$mount();
-      }
-    };
-    return vNode(vm, "vue-component-".concat(tag + Ctor.cid), data, key, undefined, undefined, {
-      Ctor: Ctor
-    });
-  }
-
-  function vNode(vm, tag, data, key, children, txt, componentOpts) {
-    return {
-      vm: vm,
-      tag: tag,
-      data: data,
-      key: key,
-      children: children,
-      txt: txt,
-      componentOpts: componentOpts
-    };
   }
 
   function renderMixin(Vue) {
@@ -937,6 +1023,28 @@
   lifecycleMixin(Vue);
   renderMixin(Vue);
   initGlobalAPI(Vue);
+  /*eg.*/
+
+  var vm = new Vue({
+    data: {
+      template: 'diff-temp'
+    }
+  });
+  var renderFn = compileToFunctions("<div id=\"a\" a=\"1\" style=\"color:blue\">\n  <p key=\"A\">A</p>\n  <p key=\"B\">B</p>\n  <p key=\"C\">C</p>\n  <p key=\"D\">D</p>\n</div>");
+  var vNode$1 = renderFn.call(vm);
+  console.log(vNode$1);
+  var el = createEl(vNode$1);
+  document.body.appendChild(el);
+  var vmC = new Vue({
+    data: {
+      template: 'diff-temp-change'
+    }
+  });
+  var renderFnC = compileToFunctions("<div id=\"a\" a=\"1\" style=\"color:#fff;background:red\">\n  <p key=\"A\">A</p>\n  <p key=\"B\">B</p>\n  <p key=\"C\">C</p>\n  <p key=\"D\">D</p>\n  <p key=\"E\">E</p>\n</div>");
+  var vNodeC = renderFnC.call(vmC);
+  setTimeout(function () {
+    patch(vNode$1, vNodeC);
+  }, 1000);
 
   return Vue;
 
