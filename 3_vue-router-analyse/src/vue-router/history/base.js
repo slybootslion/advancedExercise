@@ -8,9 +8,18 @@ class History {
   }
 
   transitionTo(path, callback) {
-    this.current = this.router.match(path)
-    this.cb && this.cb(this.current)
-    callback && callback()
+    const route = this.router.match(path)
+    const queue = [].concat(this.router.beforeEachHooks)
+
+    const iterator = (hook, next) => {
+      hook(route, this.current, next)
+    }
+
+    runQueue(queue, iterator, () => {
+      this.current = route
+      this.cb && this.cb(this.current)
+      callback && callback()
+    })
   }
 
   listen(cb) {
@@ -20,6 +29,19 @@ class History {
   getCurrentLocation() {
     return window.location.pathname
   }
+}
+
+function runQueue(q, iterator, cb) {
+  function next(idx) {
+    if (idx >= q.length) {
+      // 没有钩子函数，或者钩子函数执行完毕，调用后面的执行
+      return cb()
+    } else {
+      const hook = q[idx]
+      iterator(hook, () => next(++idx))
+    }
+  }
+  next(0)
 }
 
 export default History

@@ -17,7 +17,6 @@ function install(Vue, options) {
         this._router.init(this)
         // 将base中history的current变成响应式的
         Vue.util.defineReactive(this, '_route', this._router.history.current)
-        console.log(this._route)
       } else {
         // 实例一层层传递给子组件
         this._routerRoot = this.$parent?._routerRoot

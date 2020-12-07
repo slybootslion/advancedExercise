@@ -35,8 +35,22 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  mode: 'hash',
+  mode: 'history',
   routes,
+})
+
+router.beforeEach((to, from, next) => {
+  setTimeout(() => {
+    console.log(to)
+    next()
+  }, 1000)
+})
+
+router.beforeEach((to, from, next) => {
+  setTimeout(() => {
+    console.log(from)
+    next()
+  }, 1000)
 })
 
 Vue.config.productionTip = false

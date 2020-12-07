@@ -16,6 +16,7 @@ class VueRouter {
         break
       default:
     }
+    this.beforeEachHooks = []
   }
 
   match(path) {
@@ -36,6 +37,10 @@ class VueRouter {
     history.listen(route => {
       app._route = route
     })
+  }
+
+  beforeEach (fn) {
+    this.beforeEachHooks.push(fn)
   }
 }
 
