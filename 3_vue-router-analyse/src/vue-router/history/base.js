@@ -8,18 +8,17 @@ class History {
   }
 
   transitionTo(path, callback) {
-
     this.current = this.router.match(path)
     this.cb && this.cb(this.current)
     callback && callback()
   }
 
-  getCurrentLocation() {
-    return window.location.pathname
-  }
-
   listen(cb) {
     this.cb = cb
+  }
+
+  getCurrentLocation() {
+    return window.location.pathname
   }
 }
 

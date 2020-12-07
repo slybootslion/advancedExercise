@@ -1,8 +1,7 @@
 import { createRouteMap } from '@/vue-router/createRouteMap'
 
-function createRoute(record, loaction) {
+function createRoute(record, location) {
   const res = []
-
   if (record) {
     while (record) {
       res.unshift(record)
@@ -12,7 +11,7 @@ function createRoute(record, loaction) {
 
   return {
     ...location,
-    match: res,
+    matched: res,
   }
 }
 

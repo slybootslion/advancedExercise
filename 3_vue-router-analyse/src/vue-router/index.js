@@ -34,7 +34,7 @@ class VueRouter {
     }
     history.transitionTo(history.getCurrentLocation(), setupHashListener)
     history.listen(route => {
-      this._route = route
+      app._route = route
     })
   }
 }

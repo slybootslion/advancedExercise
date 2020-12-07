@@ -4,7 +4,7 @@ export default {
   render(h, { data, parent }) {
     const route = parent.$route
     let idx = 0
-    const records = route.match
+    const records = route.matched
     data.routerView = true
     while (parent) {
       if (parent.$vnode?.data?.routerView) {
@@ -14,8 +14,6 @@ export default {
     }
     const record = records[idx]
     if (!record) return h()
-    const t = h(record.component, data)
-    console.log(t)
-    return t
+    return h(record.component, data)
   },
 }
