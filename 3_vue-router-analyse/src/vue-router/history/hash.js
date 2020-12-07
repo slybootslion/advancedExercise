@@ -17,13 +17,17 @@ class HashHistory extends History {
 
   // 监听hash值变化
   setupListener() {
-    window.addEventListener('hashchange', () => {
+    window.addEventListener('popstate', () => {
       this.transitionTo(getHash())
     })
   }
 
   getCurrentLocation() {
     return getHash()
+  }
+
+  push(path) {
+    window.location.hash = path
   }
 }
 

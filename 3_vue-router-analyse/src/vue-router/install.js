@@ -1,3 +1,6 @@
+import routerLink from './components/router-link'
+import routerView from './components/router-view'
+
 let _Vue
 
 function install(Vue, options) {
@@ -12,12 +15,29 @@ function install(Vue, options) {
         // this.$options.router ---> new VueRouter()
         this._router = this.$options.router
         this._router.init(this)
+        // 将base中history的current变成响应式的
+        Vue.util.defineReactive(this, '_route', this._router.history.current)
       } else {
         // 实例一层层传递给子组件
         this._routerRoot = this.$parent?._routerRoot
       }
     },
   })
+
+  Object.defineProperty(Vue.prototype, '$route', {
+    get() {
+      return this._routerRoot._route // current属性，有path、matched等
+    },
+  })
+
+  Object.defineProperty(Vue.prototype, '$router', {
+    get() {
+      return this._routerRoot._router // history，路由方法：push，match，addRoute
+    },
+  })
+
+  Vue.component('router-link', routerLink)
+  Vue.component('router-view', routerView)
 }
 
 export { install, _Vue }

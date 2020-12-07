@@ -18,11 +18,24 @@ class VueRouter {
     }
   }
 
+  match(path) {
+    return this.matcher.match(path)
+  }
+
+  push(path) {
+    this.history.push(path)
+  }
+
   init(app) {
     // 初始化，根据路径做初次匹配
     const history = this.history
-    const setupHashListener = () => history.setupListener()
+    const setupHashListener = () => {
+      history.setupListener()
+    }
     history.transitionTo(history.getCurrentLocation(), setupHashListener)
+    history.listen(route => {
+      this._route = route
+    })
   }
 }
 
