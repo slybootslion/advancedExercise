@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue3响应式原理实现</title>
+</head>
+<div id="app"></div>
+<body>
+<script src="/dist/bundle.js"></script>
+<script type="text/javascript" charset="utf-8">
+const app = document.getElementById('app')
+const { reactive, effect } = Vue
+const obj = { name: 'baidu', age: 10 }
+let state = reactive(obj)
+effect(() => {
+  app.innerHTML = `使用的搜索引擎：${state.name}。年龄：${state.age}`
+})
+
+setTimeout(() => {
+  state.name = 'google'
+}, 1000)
+</script>
+</body>
+</html>
