@@ -13,16 +13,16 @@ const { reactive, effect } = Vue
 const obj = { name: 'baidu', age: 10, address: { home: 'bj' }, arr: [1, 3, 6] }
 let state = reactive(obj)
 
-state.arr[1] = 100
-
 effect(() => {
-  app.innerHTML = `使用的搜索引擎：${state.name}。年龄：${state.age}`
+  // app.innerHTML = `使用的搜索引擎：${state.name}。年龄：${state.age}`
+  app.innerHTML = state.arr[2]
 })
 
-// setTimeout(() => {
-//   state.name = 'google'
-//   state.address.company = 'shh'
-// }, 1000)
+setTimeout(() => {
+  // state.name = 'google'
+  // state.address.company = 'shh'
+  state.arr.length = 1
+}, 1000)
 </script>
 </body>
 </html>

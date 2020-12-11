@@ -1,3 +1,5 @@
+import {isArray} from "../utils";
+
 const effectStack: Function[] = []
 let currentEffect: Function | null = null
 
@@ -24,6 +26,7 @@ function effect(fun, opts = {}) {
 
 // 建立 属性和effect之间的关联（对应Vue2中的dep和watcher）
 const targetMap = new WeakMap
+
 function track(target, key) {
   if (currentEffect == undefined) return
   let depsMap = targetMap.get(target)
@@ -39,9 +42,47 @@ function track(target, key) {
   }
 }
 
+const run = effects => {
+  if (effects) effects.forEach(effect => effect())
+}
+
+function trigger(target, type, key, value) {
+  const depsMap = targetMap.get(target)
+  if (!depsMap) return
+
+
+  if (key === 'length' && isArray(target)) {
+    depsMap.forEach((dep, k) => {
+      // 如果改变了数组长度，触发更新
+      if (k === 'length' || k >= value) run(dep)
+    })
+    return
+  }
+
+  // 修改
+  if (key != undefined) {
+    const effects = depsMap.get(key)
+    run(effects)
+  }
+
+  // 添加
+  switch (type) {
+    case 'add':
+      if (isArray(target)) {
+        if (parseInt(key) + '' === key) {
+          run(depsMap.get('length'))
+        }
+      }
+      break
+    default:
+      break
+  }
+}
+
 export {
   effect,
   effectStack,
   currentEffect,
-  track
+  track,
+  trigger
 }
