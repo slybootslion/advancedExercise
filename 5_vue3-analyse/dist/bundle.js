@@ -112,13 +112,15 @@
               return res;
           // 依赖收集
           track(target, key);
+          if (res.__v_isRef)
+              return res.value;
           // 取值如果是对象，递归代理（懒代理）
           return isObject(res) ? reactive(res) : res;
       },
       set(target, key, value, recevier) {
           const oldVal = target[key];
           // 判断是否新增属性
-          const hadKey = isArray(target) && (parseInt(key, 10) + '' === key) ? Number(key) < target.length : hasOwn(target, key);
+          const hadKey = isArray(target) && parseInt(key, 10) + '' === key ? Number(key) < target.length : hasOwn(target, key);
           const res = Reflect.set(target, key, value, recevier);
           if (!hadKey) {
               // 新增属性
@@ -129,7 +131,7 @@
               trigger(target, 'set', key, value);
           }
           return res;
-      }
+      },
   };
 
   const reactiveMap = new WeakMap();
@@ -152,17 +154,21 @@
           this.setter = setter;
           this.__v_isReadonly = true;
           this.__v_isRef = true;
-          this._dirty = true;
+          this._dirty = true; // 缓存控制
           this.effect = effect(getter, {
               lazy: true,
               scheduler: effect => {
+                  this._dirty = true;
                   trigger(this, 'set', 'value');
               },
           });
       }
       get value() {
-          this._value = this.effect();
-          track(this, 'value');
+          if (this._dirty) {
+              this._value = this.effect();
+              track(this, 'value');
+              this._dirty = false;
+          }
           return this._value;
       }
       set value(val) {
@@ -183,9 +189,88 @@
       return new ComputedRefImpl(getter, setter);
   }
 
+  class RefImpl {
+      constructor(rawValue) {
+          this.rawValue = rawValue;
+          this.__v_isReadonly = true;
+          this.__v_isRef = true;
+      }
+      get value() {
+          track(this, 'value');
+          return convert(this.rawValue);
+      }
+      set value(val) {
+          if (hasChange(val, this.rawValue)) {
+              this.rawValue = convert(val);
+              trigger(this, 'set', 'value');
+          }
+      }
+  }
+  function convert(val) {
+      return isObject(val) ? reactive(val) : val;
+  }
+  function ref(rawValue) {
+      return new RefImpl(rawValue);
+  }
+  class ObjectRefImpl {
+      constructor(obj, key) {
+          this.obj = obj;
+          this.key = key;
+      }
+      get value() {
+          return this.obj[this.key];
+      }
+      set value(val) {
+          this.obj[this.key] = val;
+      }
+  }
+  function toRefs(obj) {
+      const res = isArray(obj) ? new Array(obj.length) : {};
+      for (const objKey in obj) {
+          if (obj.hasOwnProperty(objKey))
+              res[objKey] = new ObjectRefImpl(obj, objKey);
+      }
+      return res;
+  }
+
+  function apiCreateApp(render) {
+      return component => {
+          const app = {
+              mount: container => { },
+          };
+          return app;
+      };
+  }
+
+  function createRender(options) {
+      return {
+          createApp: apiCreateApp(),
+      };
+  }
+
+  function ensureRender() {
+      return createRender();
+  }
+  function createApp(rootComponent) {
+      // rootComponent = app
+      const app = ensureRender().createApp(rootComponent);
+      const { mount } = app;
+      app.mount = function (el) {
+          el = typeof el === 'string' ? document.querySelector(el) : el;
+          el.innerHTML = '';
+          mount(el);
+      };
+      return {
+          mount,
+      };
+  }
+
   exports.computed = computed;
+  exports.createApp = createApp;
   exports.effect = effect;
   exports.reactive = reactive;
+  exports.ref = ref;
+  exports.toRefs = toRefs;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

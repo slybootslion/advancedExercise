@@ -1,6 +1,6 @@
-import {currentEffect, effectStack, track, trigger} from "./effect";
-import {hasChange, hasOwn, isArray, isObject} from "../utils";
-import {reactive} from "./reactive";
+import { track, trigger } from './effect'
+import { hasChange, hasOwn, isArray, isObject } from '../utils'
+import { reactive } from './reactive'
 
 const mutableHandlers = {
   get(target, key, recevier) {
@@ -10,6 +10,8 @@ const mutableHandlers = {
     // 依赖收集
     track(target, key)
 
+    if (res.__v_isRef) return res.value
+
     // 取值如果是对象，递归代理（懒代理）
     return isObject(res) ? reactive(res) : res
   },
@@ -17,7 +19,7 @@ const mutableHandlers = {
     const oldVal = target[key]
 
     // 判断是否新增属性
-    const hadKey = isArray(target) && (parseInt(key, 10) + '' === key) ? Number(key) < target.length : hasOwn(target, key)
+    const hadKey = isArray(target) && parseInt(key, 10) + '' === key ? Number(key) < target.length : hasOwn(target, key)
 
     const res = Reflect.set(target, key, value, recevier)
 
@@ -30,7 +32,7 @@ const mutableHandlers = {
     }
 
     return res
-  }
+  },
 }
 
 export {

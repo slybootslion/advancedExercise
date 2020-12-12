@@ -5,26 +5,30 @@ class ComputedRefImpl {
   private effect
   private __v_isReadonly = true
   private __v_isRef = true
-  private _dirty = true
+  private _dirty = true // 缓存控制
   private _value
-
-  get value() {
-    this._value = this.effect()
-    track(this, 'value')
-    return this._value
-  }
-
-  set value(val) {
-    this.setter(val)
-  }
 
   constructor(getter, public setter) {
     this.effect = effect(getter, {
       lazy: true,
       scheduler: effect => {
+        this._dirty = true
         trigger(this, 'set', 'value')
       },
     })
+  }
+
+  get value() {
+    if (this._dirty) {
+      this._value = this.effect()
+      track(this, 'value')
+      this._dirty = false
+    }
+    return this._value
+  }
+
+  set value(val) {
+    this.setter(val)
   }
 }
 
