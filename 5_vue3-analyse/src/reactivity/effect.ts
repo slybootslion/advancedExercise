@@ -1,9 +1,9 @@
-import {isArray} from "../utils";
+import { isArray } from '../utils'
 
 const effectStack: Function[] = []
 let currentEffect: Function | null = null
 
-function createReactiveEffect(fun) {
+function createReactiveEffect(fun, opts) {
   const effect = function () {
     if (!effectStack.includes(effect)) {
       try {
@@ -16,16 +16,21 @@ function createReactiveEffect(fun) {
       }
     }
   }
+  effect.options = opts
   return effect
 }
 
-function effect(fun, opts = {}) {
-  const effect = createReactiveEffect(fun)
-  effect()
+function effect(fun, opts) {
+  const ef = createReactiveEffect(fun, opts)
+  if (!opts?.lazy) {
+    ef()
+  }
+
+  return ef
 }
 
 // 建立 属性和effect之间的关联（对应Vue2中的dep和watcher）
-const targetMap = new WeakMap
+const targetMap = new WeakMap()
 
 function track(target, key) {
   if (currentEffect == undefined) return
@@ -43,13 +48,20 @@ function track(target, key) {
 }
 
 const run = effects => {
-  if (effects) effects.forEach(effect => effect())
+  if (effects)
+    effects.forEach(effect => {
+      // 1. 渲染对应的effect 2. 计算属性对应的effect
+      if (effect.options?.scheduler) {
+        effect.options.scheduler(effect)
+      }else {
+        effect()
+      }
+    })
 }
 
-function trigger(target, type, key, value) {
+function trigger(target, type, key, value?) {
   const depsMap = targetMap.get(target)
   if (!depsMap) return
-
 
   if (key === 'length' && isArray(target)) {
     depsMap.forEach((dep, k) => {
@@ -79,10 +91,4 @@ function trigger(target, type, key, value) {
   }
 }
 
-export {
-  effect,
-  effectStack,
-  currentEffect,
-  track,
-  trigger
-}
+export { effect, effectStack, currentEffect, track, trigger }

@@ -15,3 +15,7 @@ export function isArray(arr): boolean {
 export function hasChange(v1, v2): boolean {
   return v1 !== v2
 }
+
+export function isFunction(fun): boolean {
+  return typeof fun === 'function'
+}

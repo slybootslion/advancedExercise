@@ -17,10 +17,13 @@
   function hasChange(v1, v2) {
       return v1 !== v2;
   }
+  function isFunction(fun) {
+      return typeof fun === 'function';
+  }
 
   const effectStack = [];
   let currentEffect = null;
-  function createReactiveEffect(fun) {
+  function createReactiveEffect(fun, opts) {
       const effect = function () {
           if (!effectStack.includes(effect)) {
               try {
@@ -34,14 +37,18 @@
               }
           }
       };
+      effect.options = opts;
       return effect;
   }
-  function effect(fun, opts = {}) {
-      const effect = createReactiveEffect(fun);
-      effect();
+  function effect(fun, opts) {
+      const ef = createReactiveEffect(fun, opts);
+      if (!opts?.lazy) {
+          ef();
+      }
+      return ef;
   }
   // 建立 属性和effect之间的关联（对应Vue2中的dep和watcher）
-  const targetMap = new WeakMap;
+  const targetMap = new WeakMap();
   function track(target, key) {
       if (currentEffect == undefined)
           return;
@@ -59,7 +66,15 @@
   }
   const run = effects => {
       if (effects)
-          effects.forEach(effect => effect());
+          effects.forEach(effect => {
+              // 1. 渲染对应的effect 2. 计算属性对应的effect
+              if (effect.options?.scheduler) {
+                  effect.options.scheduler(effect);
+              }
+              else {
+                  effect();
+              }
+          });
   };
   function trigger(target, type, key, value) {
       const depsMap = targetMap.get(target);
@@ -132,6 +147,43 @@
       return createReactiveObject(target, mutableHandlers);
   }
 
+  class ComputedRefImpl {
+      constructor(getter, setter) {
+          this.setter = setter;
+          this.__v_isReadonly = true;
+          this.__v_isRef = true;
+          this._dirty = true;
+          this.effect = effect(getter, {
+              lazy: true,
+              scheduler: effect => {
+                  trigger(this, 'set', 'value');
+              },
+          });
+      }
+      get value() {
+          this._value = this.effect();
+          track(this, 'value');
+          return this._value;
+      }
+      set value(val) {
+          this.setter(val);
+      }
+  }
+  function computed(getterOrOptions) {
+      let getter;
+      let setter;
+      if (isFunction(getterOrOptions)) {
+          getter = getterOrOptions;
+          setter = () => console.log('computed not set value');
+      }
+      else {
+          getter = getterOrOptions.get;
+          setter = getterOrOptions.set;
+      }
+      return new ComputedRefImpl(getter, setter);
+  }
+
+  exports.computed = computed;
   exports.effect = effect;
   exports.reactive = reactive;
 
