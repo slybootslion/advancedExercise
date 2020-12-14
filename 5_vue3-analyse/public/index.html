@@ -1,57 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Vue3响应式原理实现</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue3渲染原理-diff算法</title>
 </head>
-<div id="app"></div>
+
 <body>
+<div id="app"></div>
+
 <script src="/dist/bundle.js"></script>
 <script type="text/javascript" charset="utf-8">
-/*const app = document.getElementById('app')
-const { reactive, effect, computed, ref, toRefs } = Vue
-const obj = { name: 'baidu', age: 10, address: { home: 'bj' }, arr: [1, 3, 6] }
-const num = ref(1)
-let state = reactive(obj)
-
-const myAge = computed(() => state.age + 10)
-
-const counter = reactive(obj)
-const { name } = toRefs(counter)
-
-effect(() => {
-  // app.innerHTML = `使用的搜索引擎：${state.name}。年龄：${state.age}`
-  // app.innerHTML = state.arr[2]
-  // app.innerHTML = `使用的搜索引擎：${state.name}，年龄：${state.age}。用户年龄：${myAge.value}`
-  // app.innerHTML = `num:${num.value}`
-  app.innerHTML = `name:${name.value}`
-})
-
-setTimeout(() => {
-  state.name = 'google'
-  // state.age++
-  // state.address.company = 'shh'
-  // state.arr.length = 1
-  // num.value++
-}, 1000)*/
-
 const { createApp, h, reactive } = Vue
-
-const app = {
+const App = {
   setup () {
+    const state = reactive({ flag: false })
+    setTimeout(() => {
+      state.flag = !state.flag
+    }, 2000)
     return () => {
-
-      let state = reactive({ name: 'baidu' })
-      setTimeout(() => {
-        state.name = 'google'
-      }, 1000)
-
-      return h('div', { style: { color: 'blue', background: 'yellow' } }, '你好，Vue3')
+      /*      return state.flag ?
+              h('div', { style: { color: 'red' } }, 'google') :
+              h('p', { style: { color: 'blue' } }, 'baidu')*/
+      /*      return state.flag ?
+              h('div', { style: { color: 'red' } }, 'google') :
+              h('div', { style: { color: 'blue' } }, 'baidu')*/
+            return state.flag ?
+              h('div', { style: { color: 'red' } }, [
+                h('div', {}, 'google'),
+                h('div', {}, 'facebook'),
+                h('div', {}, 'youtube')
+              ]) :
+              h('div', { style: { color: 'blue' } }, 'baidu')
+      // return state.flag ?
+      //   h('div', { style: { color: 'red' } }, [
+      //     h('div', { key: 'E' }, 'E'),
+      //     h('div', { key: 'A' }, 'A'),
+      //     h('div', { key: 'B' }, 'B'),
+      //     h('div', { key: 'C' }, 'C'),
+      //   ]) :
+      //   h('div', { style: { color: 'blue' } }, [
+      //     h('div', { key: 'A' }, 'A'),
+      //     h('div', { key: 'B' }, 'B'),
+      //     h('div', { key: 'C' }, 'C'),
+      //   ])
     }
   }
 }
-createApp(app).mount('#app')
-
+createApp(App).mount('#app')
 </script>
 </body>
+
 </html>

@@ -1,23 +1,20 @@
 const nodeOpts = {
   createElement(type) {
-    return document.createElement(type)
+    return document.createElement(type);
   },
-
   inset(child, parent, anchor = null) {
-    parent.insertBefore(child, anchor)
+    parent.insertBefore(child, anchor);
   },
-
   remove(child) {
-    const parent = child.parentNode
-    if (parent) parent.removeChild(child)
+    const parent = child.parentNode;
+    if (parent) parent.removeChild(child);
   },
-
   setElementText(el, content) {
-    el.textContent = content
+    el.textContent = content;
   },
+  createTextNode(content) {
+    return document.createTextNode(content);
+  },
+};
 
-  createTextNode(data: string): Text {
-    return document.createTextNode(data)
-  },
-}
-export { nodeOpts }
+export { nodeOpts };

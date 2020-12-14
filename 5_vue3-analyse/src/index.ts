@@ -1,3 +1,3 @@
-export * from './reactivity'
-export * from './runtime-dom'
-export * from './runtim-core'
+export * from './reactivity/index'
+export * from './runtime-dom/index'
+export * from './runtime-core/index'

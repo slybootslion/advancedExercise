@@ -1,52 +1,57 @@
-import { hasChange, isArray, isObject } from '../utils'
-import { reactive } from './reactive'
-import { track, trigger } from './effect'
+import { hasChange, isObject } from "../shared";
+import { track, trigger } from "./effect";
+import { reactive } from "./reacive";
 
 class RefImpl {
-  private __v_isReadonly = true
-  private __v_isRef = true
-
-  constructor(public rawValue) {}
+  public readonly __v_isRef = true
+  public _value;
+  constructor(public rawVal) {
+    this._value = convert(rawVal)
+  }
 
   get value() {
     track(this, 'value')
-    return convert(this.rawValue)
+    return this._value
   }
 
-  set value(val) {
-    if (hasChange(val, this.rawValue)) {
-      this.rawValue = convert(val)
+  set value(nVal) {
+    if (hasChange(this.rawVal, nVal)) {
+      this.rawVal = nVal
+      this._value = convert(nVal)
       trigger(this, 'set', 'value')
     }
   }
+}
+
+function ref(rawVal) {
+  return new RefImpl(rawVal)
 }
 
 function convert(val) {
   return isObject(val) ? reactive(val) : val
 }
 
-function ref(rawValue) {
-  return new RefImpl(rawValue)
-}
-
 class ObjectRefImpl {
-  constructor(public obj, public key) {}
+  constructor(public object, public key) { }
 
   get value() {
-    return this.obj[this.key]
+    return this.object[this.key]
   }
 
-  set value(val) {
-    this.obj[this.key] = val
+  set value(nVal) {
+    this.object[this.key] = nVal
   }
 }
 
-function toRefs(obj) {
-  const res = isArray(obj) ? new Array(obj.length) : {}
-  for (const objKey in obj) {
-    if (obj.hasOwnProperty(objKey)) res[objKey] = new ObjectRefImpl(obj, objKey)
+function toRefs(object) {
+  const result = Array.isArray(object) ? new Array(object.length) : {}
+  for (const key in object) {
+    result[key] = new ObjectRefImpl(object, key)
   }
-  return res
+  return result
 }
 
-export { ref, toRefs }
+export {
+  ref,
+  toRefs
+}
