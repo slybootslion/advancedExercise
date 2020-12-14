@@ -20,7 +20,7 @@ function createReactiveEffect(fun, opts) {
   return effect
 }
 
-function effect(fun, opts) {
+function effect(fun, opts = {} as any) {
   const ef = createReactiveEffect(fun, opts)
   if (!opts?.lazy) {
     ef()

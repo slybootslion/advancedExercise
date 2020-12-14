@@ -20,6 +20,9 @@
   function isFunction(fun) {
       return typeof fun === 'function';
   }
+  function isString(str) {
+      return typeof str === 'string';
+  }
 
   const effectStack = [];
   let currentEffect = null;
@@ -40,7 +43,7 @@
       effect.options = opts;
       return effect;
   }
-  function effect(fun, opts) {
+  function effect(fun, opts = {}) {
       const ef = createReactiveEffect(fun, opts);
       if (!opts?.lazy) {
           ef();
@@ -233,19 +236,111 @@
       return res;
   }
 
+  function createVNode(type, props = {}, children = null) {
+      const shapeFlag = isString(type) ? 1 /* ELEMENT */ : isObject(type) ? 4 /* STATEFUL_COMPONENT */ : 0;
+      // type
+      const vNode = {
+          type,
+          props,
+          children,
+          component: null,
+          el: null,
+          key: props.key,
+          shapeFlag,
+      };
+      if (isArray(children)) {
+          // 组件
+          vNode.shapeFlag |= 16 /* ARRAY_CHILDREN */;
+      }
+      else {
+          // 文本
+          vNode.shapeFlag |= 8 /* TEXT_CHILDREN */;
+      }
+      return vNode;
+  }
+
   function apiCreateApp(render) {
       return component => {
           const app = {
-              mount: container => { },
+              mount: container => {
+                  const vNode = createVNode(component);
+                  render(vNode, container);
+              },
           };
           return app;
       };
   }
 
-  function createRender(options) {
-      return {
-          createApp: apiCreateApp(),
+  function createComponentInstance(vNode) {
+      const instance = {
+          type: vNode.type,
+          props: {},
+          subTree: null,
+          vNode,
+          render: null,
+          setupState: null,
+          isMounted: false,
       };
+      return instance;
+  }
+  function setupComponent(instance) {
+      setupStatefulComponent(instance);
+  }
+  function setupStatefulComponent(instance) {
+      let { setup } = instance.type;
+      if (setup) {
+          const setupResult = setup(instance.props);
+          return handleSetupResult(instance, setupResult);
+      }
+  }
+  function handleSetupResult(instance, setupResult) {
+      if (isFunction(setupResult)) {
+          instance.render = setupResult;
+      }
+      else {
+          instance.setupState = setupResult;
+      }
+  }
+  function setupRenderEffect(instance, vNode, container) {
+      effect(() => {
+          if (!instance.isMounted) {
+              // 组件没有挂载，初始化
+              console.log(instance.render());
+          }
+      });
+  }
+
+  function mountComponent(n2, container) {
+      const instance = n2.component = createComponentInstance(n2);
+      setupComponent(instance);
+      setupRenderEffect(instance);
+  }
+  function patch(n1, n2, container) {
+      const { shapeFlag } = n2;
+      const processComponent = (n1, n2, container) => {
+          if (n1 == null) {
+              mountComponent(n2);
+          }
+      };
+      // 不是元素
+      if (shapeFlag & 1 /* ELEMENT */) ;
+      else {
+          processComponent(n1, n2);
+      }
+  }
+
+  function createRender(options) {
+      const render = (vNode, container) => {
+          // 初次渲染
+          patch(null, vNode);
+      };
+      return {
+          createApp: apiCreateApp(render),
+      };
+  }
+
+  function h(type, props, children) {
+      return createVNode(type, props, children);
   }
 
   function ensureRender() {
@@ -267,7 +362,10 @@
 
   exports.computed = computed;
   exports.createApp = createApp;
+  exports.createRender = createRender;
+  exports.createVNode = createVNode;
   exports.effect = effect;
+  exports.h = h;
   exports.reactive = reactive;
   exports.ref = ref;
   exports.toRefs = toRefs;

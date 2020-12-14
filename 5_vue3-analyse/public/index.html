@@ -42,7 +42,6 @@ const app = {
     return () => {
 
       let state = reactive({ name: 'baidu' })
-
       setTimeout(() => {
         state.name = 'google'
       }, 1000)
@@ -51,7 +50,6 @@ const app = {
     }
   }
 }
-
 createApp(app).mount('#app')
 
 </script>

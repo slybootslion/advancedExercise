@@ -19,3 +19,9 @@ export function hasChange(v1, v2): boolean {
 export function isFunction(fun): boolean {
   return typeof fun === 'function'
 }
+
+export function isString(str): boolean {
+  return typeof str === 'string'
+}
+
+export { ShapeFlags } from './ShapeFlags'
