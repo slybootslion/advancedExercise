@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>简易版Vue2.x实现</title>
+</head>
+<body>
+<h3>这是最最简化版的一个Vue2数据响应式原理实现：</h3>
+<div id="app"></div>
+<input type="text" id="input">
+
+<script type="text/javascript" charset="utf-8">
+const app = document.getElementById('app')
+const input = document.getElementById('input')
+
+const state = {
+  name: 'baidu'
+}
+let active = null
+
+function defineReactive (obj) {
+  Object.keys(obj).forEach(key => {
+    let val = obj[key]
+    let dep = []
+    Object.defineProperty(obj, key, {
+      get () {
+        // 依赖收集
+        if (active) dep.push(active)
+        return val
+      },
+      set (nVal) {
+        val = nVal
+        dep.forEach(watcher => watcher())
+      }
+    })
+  })
+}
+
+defineReactive(state)
+
+// 发布订阅
+function watcher (callback) {
+  active = callback
+  callback()
+  active = null
+}
+
+watcher(() => {
+  app.innerHTML = state.name
+  input.value = state.name
+})
+
+setTimeout(() => {
+  state.name = 'google'
+}, 1000)
+
+input.addEventListener('input', e => state.name = e.target.value)
+
+
+</script>
+</body>
+</html>
